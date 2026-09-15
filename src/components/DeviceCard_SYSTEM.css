@@ -1,0 +1,110 @@
+.system-panel-list {
+	display: flex;
+	flex-direction: column;
+	gap: 0.625rem;
+}
+
+.system-panel {
+	padding: 0.75rem;
+	border: 1px solid #333;
+	border-radius: 0.375rem;
+	background-color: #181818;
+}
+
+.system-panel-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 0.5rem;
+}
+
+.system-panel-heading {
+	display: flex;
+	align-items: baseline;
+	gap: 0.5rem;
+}
+
+.system-panel-id {
+	color: #7ad6c7;
+	font-weight: 700;
+}
+
+.system-panel-character {
+	color: #f0b429;
+	font-weight: 700;
+}
+
+.system-panel-name {
+	color: #fff;
+	font-weight: 700;
+}
+
+.system-panel-toggle {
+	padding: 0.25rem 0.5rem;
+	border: 1px solid #555;
+	border-radius: 0.25rem;
+	background-color: #2a2a2a;
+	cursor: pointer;
+}
+
+.system-setup-groups {
+	display: flex;
+	flex-direction: column;
+	gap: 0.375rem;
+	margin-top: 0.5rem;
+}
+
+.system-setup-group {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.375rem;
+}
+
+.system-setup-group-title {
+	flex-shrink: 0;
+	padding: 0.0625rem 0.375rem;
+	border-radius: 0.1875rem;
+	background-color: rgba(122, 214, 199, 0.15);
+	color: #7ad6c7;
+	font-size: 12px;
+	font-weight: 700;
+	letter-spacing: 0.5px;
+	text-transform: uppercase;
+}
+
+.system-setup-item {
+	display: flex;
+	align-items: center;
+	gap: 0.3125rem;
+}
+
+.system-setup-item-label {
+	color: #999;
+	font-size: 13px;
+	white-space: nowrap;
+}
+
+.system-setup-item-value {
+	padding: 0.0625rem 0.375rem;
+	border-radius: 0.1875rem;
+	background-color: #000;
+	color: rgb(245, 255, 58);
+	font-family: 'Courier New', monospace;
+	font-size: 15px;
+	font-weight: 700;
+}
+
+.system-setup-bit-value {
+	min-width: 1.25rem;
+	padding: 0.0625rem 0.25rem;
+	text-align: center;
+}
+
+.system-setup-bit-value.on {
+	color: #00ff00;
+}
+
+.system-setup-bit-value.off {
+	color: #ff4444;
+}

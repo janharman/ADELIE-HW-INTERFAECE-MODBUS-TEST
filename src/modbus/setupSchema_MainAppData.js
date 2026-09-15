@@ -1,0 +1,46 @@
+export const createEmptyGreenBoxSetup = () => ({
+	recordVersion: 0,
+	recordId: 0,
+	adeComVersion: 0,
+	adeComVersionDate: 0,
+	adeKerVersion: 0,
+	adeKerVersionDate: 0,
+	gbSerialNumber: 0,
+	numberOfSystems: 0,
+	numberOfGates: 0,
+	numberOfVfds: 0,
+	nubmerOfWorkstations: 0,
+	numberOfModbusDevices: 0,
+	numberOfInterfaces: 0,
+	numberOfPeripherals: 0,
+	nubmberOfExtSignals: 0,
+	numberOfGlobalCtrlDevices: 0,
+	numberOfRockhoppers: 0,
+	gbName: '',
+	gbDescription: '',
+})
+
+export const MAIN_APP_DATA_FIELDS = [
+	{ name: 'recordVersion', address: 0, type: 'highByte' },
+	{ name: 'recordId', address: 0, type: 'lowByte' },
+	{ name: 'adeComVersion', address: 1, type: 'word' },
+	{ name: 'adeComVersionDate', address: 2, type: 'doubleWord' },
+	{ name: 'adeKerVersion', address: 4, type: 'word' },
+	{ name: 'adeKerVersionDate', address: 5, type: 'doubleWord' },
+	{ name: 'gbSerialNumber', address: 7, type: 'word' },
+	{ name: 'numberOfSystems', address: 8, type: 'highByte' },
+	{ name: 'numberOfGates', address: 8, type: 'lowByte' },
+	{ name: 'numberOfVfds', address: 9, type: 'highByte' },
+	{ name: 'nubmerOfWorkstations', address: 9, type: 'lowByte' },
+	{ name: 'numberOfModbusDevices', address: 10, type: 'highByte' },
+	{ name: 'numberOfInterfaces', address: 10, type: 'lowByte' },
+	{ name: 'numberOfPeripherals', address: 11, type: 'highByte' },
+	{ name: 'nubmberOfExtSignals', address: 11, type: 'lowByte' },
+	{ name: 'numberOfGlobalCtrlDevices', address: 12, type: 'highByte' },
+	{ name: 'numberOfRockhoppers', address: 12, type: 'lowByte' },
+]
+
+export const GB_NAME_AND_DESC_FIELDS = [
+	{ name: 'gbName', startRegister: 0, registerCount: 32 },
+	{ name: 'gbDescription', startRegister: 32, registerCount: 64 },
+]

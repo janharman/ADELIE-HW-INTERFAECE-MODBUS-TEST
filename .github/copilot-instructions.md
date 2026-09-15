@@ -1,0 +1,14 @@
+- Spolu komunikujeme v češtině, ale kód a komentáře v něm budou psány v angličtině.
+- Píš všechny komentáře v programu anglicky
+- Hodně používej komponenty, aby byl kód přehledný a dobře strukturovaný
+- Budeme používat tmavý režim.
+- Profesionální a průmyslový standard layoutu a designu.
+- Celý layout (user interface) bude v angličtině.
+- Udržuj tento řád: každá komponenta bude mít svůj vlastní css soubor, který bude importován do komponenty.
+- Používej tabelátory 4 znaky pro odsazení kódu. Nedávej mezery ale tabelátory.
+- Všude použíej tabelátory i v css souborech.
+- Nedělej pokáždé build a lint, to vidím online, pokud se to nepovede, tak to opravíme.
+- Přidávej do kódu komentáře, které vysvětlují, co daná část kódu dělá.
+- Přistupuj k mým návrhům kriticky a pokud se ti něco nebude líbit, tak mi to řekni a vysvětli proč.
+- Ke každé komponentě vytvoř samostatný CSS soubor, který bude importován přímo do této komponenty.
+- Nepoužívej aria-label atributy v kódu.

@@ -1,0 +1,55 @@
+.global-ctrl-device-table-wrapper {
+	width: 100%;
+	overflow-x: auto;
+}
+
+.global-ctrl-device-table {
+	width: 100%;
+	border-collapse: collapse;
+	table-layout: auto;
+	background-color: #181818;
+}
+
+.global-ctrl-device-table th,
+.global-ctrl-device-table td {
+	padding: 0.3rem 0.4rem;
+	border-bottom: 1px solid #333;
+	text-align: left;
+}
+
+.global-ctrl-device-table th {
+	position: sticky;
+	top: 0;
+	background-color: #111;
+	color: #7ad6c7;
+	font-size: 11px;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+}
+
+.global-ctrl-device-table-row td {
+	color: #ddd;
+	font-family: 'Courier New', monospace;
+	font-size: 13px;
+}
+
+.global-ctrl-device-ref-cell {
+	color: #7ad6c7 !important;
+	font-size: 16px !important;
+	font-weight: 700;
+}
+
+.global-ctrl-device-spec-cell {
+	overflow: hidden;
+	color: #fff !important;
+	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+	font-size: 13px !important;
+	font-weight: 600;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.global-ctrl-device-range-cell {
+	color: #d2df79 !important;
+	white-space: nowrap;
+}

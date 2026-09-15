@@ -1,0 +1,210 @@
+import React, { useState, useImperativeHandle, forwardRef, useRef, useEffect } from 'react';
+import './SerialManager.css';
+
+const SerialManager = forwardRef((props, ref) => {
+	const [status, setStatus] = useState('Disconnected');
+	const portRef = useRef(null);
+	const readerRef = useRef(null);
+	const keepReading = useRef(false); 
+	const incomingBuffer = useRef([]);
+	const responseWaiterRef = useRef(null);
+	
+	const STORAGE_KEY = 'last_used_serial_port_index';
+
+// 1. Definujeme funkci pro handleDisconnect mimo useEffect, aby byla stabilní
+    const handlePhysicalDisconnect = (event) => {
+        console.warn("Hardware event: Device lost", event.port);
+        
+        // Zde je ten trik: Pokud máme jakýkoliv aktivní port a systém nahlásí odpojení,
+        // prostě vyvoláme totální úklid.
+        if (portRef.current) {
+            // Voláme přímo interní úklid
+            forceShutdown();
+        }
+    };
+
+    // 2. Speciální funkce pro okamžité "zabití" spojení bez čekání na promisy
+    const forceShutdown = () => {
+        keepReading.current = false;
+        if (readerRef.current) {
+            try { readerRef.current.cancel(); } catch(e) {}
+        }
+        portRef.current = null;
+        readerRef.current = null;
+        setStatus('Disconnected');
+        console.log("Status forced to Disconnected");
+		if (props.onConnectionChange) props.onConnectionChange(false);
+    };
+
+    useEffect(() => {
+        // Registrace na globální navigator.serial
+        if (navigator.serial) {
+            navigator.serial.addEventListener('disconnect', handlePhysicalDisconnect);
+        }
+
+        const autoConnect = async () => {
+            if (!navigator.serial) return;
+            const allowedPorts = await navigator.serial.getPorts();
+            if (allowedPorts.length > 0) {
+                const savedIndex = localStorage.getItem(STORAGE_KEY);
+                const indexToOpen = savedIndex !== null ? parseInt(savedIndex, 10) : 0;
+                if (allowedPorts[indexToOpen]) {
+                    await initializePort(allowedPorts[indexToOpen], indexToOpen);
+                }
+            }
+        };
+        autoConnect();
+
+        return () => {
+            if (navigator.serial) {
+                navigator.serial.removeEventListener('disconnect', handlePhysicalDisconnect);
+            }
+            disconnect();
+        };
+    }, []);
+	
+	const disconnect = async () => {
+		if (!portRef.current) return;
+		setStatus('Disconnecting...');
+		keepReading.current = false;
+
+		if (readerRef.current) {
+			try {
+				await readerRef.current.cancel(); 
+			} catch (e) {
+				console.error("Reader cancel error:", e);
+			}
+		}
+
+		await new Promise(resolve => setTimeout(resolve, 50));
+
+		try {
+			if (portRef.current) {
+				await portRef.current.close();
+			}
+		} catch (e) {
+			console.error("Port close error:", e);
+		}
+
+		portRef.current = null;
+		readerRef.current = null;
+		setStatus('Disconnected');
+		if (props.onConnectionChange) props.onConnectionChange(false);
+	};
+
+	const readLoop = async (port) => {
+		keepReading.current = true;
+		while (port.readable && keepReading.current) {
+			readerRef.current = port.readable.getReader();
+			try {
+				while (keepReading.current) {
+					const { value, done } = await readerRef.current.read();
+					if (done || !keepReading.current) break;
+					incomingBuffer.current.push(...value);
+
+					const waiter = responseWaiterRef.current;
+					const isExceptionResponse = incomingBuffer.current[1] & 0x80;
+					const responseLength = isExceptionResponse ? 5 : waiter?.expectedLength;
+					if (waiter && responseLength && incomingBuffer.current.length >= responseLength) {
+						responseWaiterRef.current = null;
+						clearTimeout(waiter.timeoutId);
+						waiter.resolve(incomingBuffer.current.slice(0, responseLength))
+						incomingBuffer.current = [];
+					}
+				}
+			} catch (err) {
+				console.warn("Read stream error:", err);
+			} finally {
+				if (readerRef.current) {
+					readerRef.current.releaseLock();
+					readerRef.current = null;
+				}
+			}
+		}
+	};
+
+	const initializePort = async (port, index) => {
+		try {
+			if (portRef.current) await disconnect();
+			await port.open({ 
+				baudRate: 19200, 
+				stopBits: 1,
+				dataBits: 8,
+				parity: 'none',
+				flowControl: 'none'
+			});
+			portRef.current = port;
+			localStorage.setItem(STORAGE_KEY, index.toString());
+			setStatus(`Connected (Port #${index + 1})`);
+			if (props.onConnectionChange) props.onConnectionChange(true);
+			readLoop(port);
+			return true;
+		} catch (err) {
+			console.error("Failed to open port:", err);
+			setStatus('Error Opening Port');
+			if (props.onConnectionChange) props.onConnectionChange(false);
+			return false;
+		}
+	};
+
+	const connectManually = async () => {
+		try {
+			const port = await navigator.serial.requestPort();
+			const allowedPorts = await navigator.serial.getPorts();
+			const newIndex = allowedPorts.indexOf(port);
+			await initializePort(port, newIndex !== -1 ? newIndex : 0);
+		} catch (err) {}
+	};
+
+	useImperativeHandle(ref, () => ({
+		async sendAndReceive(dataArray) {
+			if (!portRef.current?.writable) throw new Error("Port not connected");
+			incomingBuffer.current = [];
+			const registerCount = (dataArray[4] << 8) | dataArray[5];
+			const expectedLength = (registerCount * 2) + 5;
+			const writer = portRef.current.writable.getWriter();
+			const response = new Promise((resolve, reject) => {
+				const timeoutId = setTimeout(() => {
+					if (responseWaiterRef.current?.timeoutId === timeoutId) {
+						responseWaiterRef.current = null;
+						reject(new Error('Serial response timeout'));
+					}
+				}, 500);
+
+				responseWaiterRef.current = { expectedLength, resolve, reject, timeoutId };
+			});
+
+			try {
+				await writer.write(new Uint8Array(dataArray));
+			} finally {
+				writer.releaseLock();
+			}
+
+			return response;
+		},
+		disconnect
+	}));
+
+	return (
+		<div>
+			<div className="status-badge-container">
+				<div className={`status-badge ${status.includes('Connected') ? 'online' : 'offline'}`}>
+					{status}
+				</div>
+			</div>
+			
+			<div className="serial-btn-row">
+				<button className="btn-conn" onClick={connectManually}>
+					{portRef.current ? '🔄 Change' : 'Connect Hardware'}
+				</button>
+				{portRef.current && (
+					<button className="btn-disc" onClick={disconnect}>
+						❌ Disconnect
+					</button>
+				)}
+			</div>
+		</div>
+	);
+});
+
+export default SerialManager;

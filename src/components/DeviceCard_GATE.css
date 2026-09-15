@@ -1,0 +1,80 @@
+.gate-table-wrapper {
+	width: 100%;
+	overflow-x: auto;
+}
+
+.gate-table {
+	width: 100%;
+	border-collapse: collapse;
+	table-layout: auto;
+	background-color: #181818;
+}
+
+.gate-table th,
+.gate-table td {
+	padding: 0.25rem 0.3rem;
+	border-bottom: 1px solid #333;
+	text-align: left;
+}
+
+.gate-table th {
+	position: sticky;
+	top: 0;
+	background-color: #111;
+	color: #7ad6c7;
+	font-size: 11px;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	white-space: normal;
+}
+
+.gate-table-row td {
+	color: #ddd;
+	font-family: 'Courier New', monospace;
+	font-size: 13px;
+}
+
+.gate-id-cell {
+	color: #7ad6c7 !important;
+	font-size: 16px !important;
+	font-weight: 700;
+}
+
+.gate-mid-cell {
+	color: #f0b429 !important;
+	font-size: 12px !important;
+	font-weight: 700;
+}
+
+.gate-zone-cell {
+	color: #d2df79 !important;
+	font-size: 14px !important;
+	font-weight: 700;
+}
+
+.gate-table-row:hover td {
+	background-color: #202820;
+}
+
+.gate-table-name {
+	overflow: hidden;
+	color: #fff !important;
+	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+	font-size: 15px !important;
+	font-weight: 700;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.gate-secondary-cell {
+	color: #aaa !important;
+	font-size: 11px !important;
+}
+
+.gate-runtime-placeholder {
+	color: #666 !important;
+	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+	font-size: 12px !important;
+	font-style: italic;
+	white-space: nowrap;
+}
