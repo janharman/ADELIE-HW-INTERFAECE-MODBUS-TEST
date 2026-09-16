@@ -14,6 +14,13 @@ import {
 	createEmptyGateSetup,
 } from './setupSchema_GATE'
 import {
+	GATE_ERROR_TYPE_BITS,
+	GATE_INPUT_STATUS_BITS,
+	GATE_JUMPER_FUNCTION_LABELS,
+	GATE_STATUS_BITS,
+	createEmptyGateRuntime,
+} from './runtimeSchema_GATE'
+import {
 	VSD_SETUP_FIELDS,
 	VSD_SETUP_PARAMETER_FIELDS,
 	VSD_SETUP_STRING_FIELDS,
@@ -45,6 +52,7 @@ import {
 	MODBUS_DEVICE_SETUP_STRING_FIELDS,
 	createEmptyModbusDeviceSetup,
 } from './setupSchema_ModbusDevice'
+import { createEmptyModbusDeviceRuntime } from './runtimeSchema_ModbusDevice'
 import {
 	INTERFACE_BRANCH_FIELDS,
 	INTERFACE_SETUP_FIELDS,
@@ -71,6 +79,12 @@ import {
 	createEmptyRockhopperSetup,
 } from './setupSchema_Rockhopper'
 import {
+	ROCKHOPPER_DIGITAL_INPUT_BITS,
+	ROCKHOPPER_ERROR_BITS,
+	ROCKHOPPER_STATUS_BITS,
+	createEmptyRockhopperRuntime,
+} from './runtimeSchema_Rockhopper'
+import {
 	GLOBAL_CTRL_DEVICE_SETUP_FIELDS,
 	GLOBAL_CTRL_DEVICE_SETUP_INPUT_RANGE_START_ADDRESS,
 	GLOBAL_CTRL_DEVICE_SETUP_OUTPUT_RANGE_START_ADDRESS,
@@ -88,15 +102,18 @@ import {
 export const greenBOX_Setup = createEmptyGreenBoxSetup()
 export const systemSetups = []
 export const gateSetups = []
+export const gateRuntimeData = []
 export const vsdSetups = []
 export const vsdRuntimeData = []
 export const workstationSetups = []
 export const modbusDeviceSetups = []
+export const modbusDeviceRuntimeData = []
 export const interfaceSetups = []
 export const interfaceRuntimeData = []
 export const peripheralSetups = []
 export const externalSignalSetups = []
 export const rockhopperSetups = []
+export const rockhopperRuntimeData = []
 export const globalCtrlDeviceSetups = []
 
 const readField = (response, field) => {
@@ -202,6 +219,38 @@ const decodeGateSetup = (response, frame) => {
 	return { gateIndex: frame.gateIndex, gateSetup: gateSetups[frame.gateIndex] }
 }
 
+// Register 3 (Motor Current) is a signed 16-bit value: negative means "maximal current at last Op/Cl".
+const toSigned16 = (value) => (value > 0x7fff ? value - 0x10000 : value)
+
+const decodeGateRuntime = (response, frame) => {
+	if (!isValidReadResponse(response, frame)) return null
+
+	const gateStatusRegister = getRegister(response, 1)
+	const errorTypeRegister = getRegister(response, 4)
+	const jumperFunction = (errorTypeRegister >> 8) & 0xff
+	const values = {
+		communicationStatus: getRegister(response, 0),
+		gateStatusBits: decodeBits(gateStatusRegister & 0xff, GATE_STATUS_BITS),
+		inputStatusBits: decodeBits((gateStatusRegister >> 8) & 0xff, GATE_INPUT_STATUS_BITS),
+		pressure: getRegister(response, 2),
+		current: toSigned16(getRegister(response, 3)),
+		errorTypeBits: decodeBits(errorTypeRegister & 0xff, GATE_ERROR_TYPE_BITS),
+		jumperFunction,
+		jumperFunctionLabel: GATE_JUMPER_FUNCTION_LABELS[jumperFunction] ?? `Unknown (${jumperFunction})`,
+		openCloseTime: getRegister(response, 5),
+		openCloseTimeSeconds: getRegister(response, 5) * 0.025,
+		supplyVoltage: getRegister(response, 6),
+		openCloseEnergy: getRegister(response, 7),
+		openCloseEnergyJoules: getRegister(response, 7) / 10,
+		chipTemperature: getRegister(response, 8),
+		chipTemperatureCelsius: getRegister(response, 8) / 2,
+		position: getRegister(response, 9),
+	}
+
+	gateRuntimeData[frame.gateIndex] = { ...createEmptyGateRuntime(), ...values }
+	return { gateIndex: frame.gateIndex, gateRuntime: gateRuntimeData[frame.gateIndex] }
+}
+
 const decodeVsdSetup = (response, frame) => {
 	if (!isValidReadResponse(response, frame)) return null
 
@@ -218,6 +267,10 @@ const decodeVsdSetup = (response, frame) => {
 	vsdSetups[frame.vsdIndex] = { ...createEmptyVsdSetup(), ...values }
 	return { vsdIndex: frame.vsdIndex, vsdSetup: vsdSetups[frame.vsdIndex] }
 }
+
+const decodeBits = (value, bitMap) => Object.fromEntries(
+	Object.entries(bitMap).map(([name, bit]) => [name, (value >> bit) & 1]),
+)
 
 const decodeVsdRuntime = (response, frame) => {
 	if (!isValidReadResponse(response, frame)) return null
@@ -251,6 +304,26 @@ const decodeVsdRuntime = (response, frame) => {
 
 	vsdRuntimeData[frame.vsdIndex] = { ...createEmptyVsdRuntime(), ...values }
 	return { vsdIndex: frame.vsdIndex, vsdRuntime: vsdRuntimeData[frame.vsdIndex] }
+}
+
+const decodeModbusDeviceRuntime = (response, frame) => {
+	if (!isValidReadResponse(response, frame)) return null
+
+	const values = {
+		communicationStatus: toSigned16(getRegister(response, 0)),
+		pressure: toSigned16(getRegister(response, 1)),
+		temperatureA: toSigned16(getRegister(response, 2)) / 10,
+		temperatureB: toSigned16(getRegister(response, 3)) / 10,
+	}
+
+	modbusDeviceRuntimeData[frame.modbusDeviceIndex] = {
+		...createEmptyModbusDeviceRuntime(),
+		...values,
+	}
+	return {
+		modbusDeviceIndex: frame.modbusDeviceIndex,
+		modbusDeviceRuntime: modbusDeviceRuntimeData[frame.modbusDeviceIndex],
+	}
 }
 
 const decodeWorkstationSetup = (response, frame) => {
@@ -342,10 +415,6 @@ const decodeInterfaceSetup = (response, frame) => {
 		interfaceSetup: interfaceSetups[frame.interfaceIndex],
 	}
 }
-
-const decodeBits = (value, bitMap) => Object.fromEntries(
-	Object.entries(bitMap).map(([name, bit]) => [name, (value >> bit) & 1]),
-)
 
 const INTERFACE_32_BIT_OFFSETS = new Set([2, 4, 25])
 
@@ -480,6 +549,38 @@ const decodeRockhopperSetup = (response, frame) => {
 	}
 }
 
+const decodeRockhopperRuntime = (response, frame) => {
+	if (!isValidReadResponse(response, frame)) return null
+	const readDoubleWord = (address) => (getRegister(response, address) * 0x10000) + getRegister(response, address + 1)
+	const toSigned32 = (value) => (value > 0x7fffffff ? value - 0x100000000 : value)
+
+	const values = {
+		communicationQuality: getRegister(response, 0),
+		digitalInputs: decodeBits(getRegister(response, 1), ROCKHOPPER_DIGITAL_INPUT_BITS),
+		statusBits: decodeBits(getRegister(response, 2), ROCKHOPPER_STATUS_BITS),
+		errorBits: decodeBits(getRegister(response, 3), ROCKHOPPER_ERROR_BITS),
+		pressureSensors: [4, 5, 6].map((address) => toSigned16(getRegister(response, address))),
+		currentSensors: [7, 8, 9].map((address) => getRegister(response, address)),
+		extTemperature: toSigned16(getRegister(response, 10)) / 10,
+		extHumidity: getRegister(response, 11) / 100,
+		extAtmPressure: readDoubleWord(12),
+		extHiPressure: toSigned32(readDoubleWord(14)),
+		mcuTemperature: toSigned16(getRegister(response, 16)) / 10,
+		power24Vdc: getRegister(response, 17),
+		power5Vdc: getRegister(response, 18),
+	}
+
+	rockhopperRuntimeData[frame.rockhopperIndex] = {
+		...createEmptyRockhopperRuntime(),
+		...values,
+	}
+
+	return {
+		rockhopperIndex: frame.rockhopperIndex,
+		rockhopperRuntime: rockhopperRuntimeData[frame.rockhopperIndex],
+	}
+}
+
 const decodeGlobalCtrlDeviceSetup = (response, frame) => {
 	if (!isValidReadResponse(response, frame)) return null
 
@@ -517,15 +618,18 @@ const DECODERS = {
 	gbNameAndDescription: decodeGbNameAndDescription,
 	systemSetup: decodeSystemSetup,
 	gateSetup: decodeGateSetup,
+	gateRuntime: decodeGateRuntime,
 	vsdSetup: decodeVsdSetup,
 	vsdRuntime: decodeVsdRuntime,
 	workstationSetup: decodeWorkstationSetup,
 	modbusDeviceSetup: decodeModbusDeviceSetup,
+	modbusDeviceRuntime: decodeModbusDeviceRuntime,
 	interfaceSetup: decodeInterfaceSetup,
 	interfaceRuntime: decodeInterfaceRuntime,
 	peripheralSetup: decodePeripheralSetup,
 	externalSignalSetup: decodeExternalSignalSetup,
 	rockhopperSetup: decodeRockhopperSetup,
+	rockhopperRuntime: decodeRockhopperRuntime,
 	globalCtrlDeviceSetup: decodeGlobalCtrlDeviceSetup,
 }
 
@@ -541,14 +645,17 @@ export const resetSetupData = () => {
 	Object.assign(greenBOX_Setup, createEmptyGreenBoxSetup())
 	systemSetups.length = 0
 	gateSetups.length = 0
+	gateRuntimeData.length = 0
 	vsdSetups.length = 0
 	vsdRuntimeData.length = 0
 	workstationSetups.length = 0
 	modbusDeviceSetups.length = 0
+	modbusDeviceRuntimeData.length = 0
 	interfaceSetups.length = 0
 	interfaceRuntimeData.length = 0
 	peripheralSetups.length = 0
 	externalSignalSetups.length = 0
 	rockhopperSetups.length = 0
+	rockhopperRuntimeData.length = 0
 	globalCtrlDeviceSetups.length = 0
 }

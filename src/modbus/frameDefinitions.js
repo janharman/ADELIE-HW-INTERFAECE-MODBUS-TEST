@@ -1,5 +1,8 @@
 import { buildVsdRuntimeReads } from './runtimeSchema_VSD'
 import { buildInterfaceRuntimeReads } from './runtimeSchema_Interface'
+import { buildGateRuntimeReads } from './runtimeSchema_GATE'
+import { buildModbusDeviceRuntimeReads } from './runtimeSchema_ModbusDevice'
+import { buildRockhopperRuntimeReads } from './runtimeSchema_Rockhopper'
 
 export const DEFAULT_MODBUS_SLAVE_ADDRESS = 1
 export const MODBUS_SLAVE_ADDRESS_STORAGE_KEY = 'modbus_slave_address'
@@ -17,6 +20,9 @@ export const HOLDING_REGISTER_READS = [
 const CATEGORY_RUNTIME_READS = {
 	vfds: (setup) => buildVsdRuntimeReads(setup?.numberOfVfds),
 	interfaces: (setup) => buildInterfaceRuntimeReads(setup?.numberOfInterfaces),
+	gates: (setup) => buildGateRuntimeReads(setup?.numberOfGates),
+	modbusDevices: (setup) => buildModbusDeviceRuntimeReads(setup?.numberOfModbusDevices),
+	rockhoppers: (setup) => buildRockhopperRuntimeReads(setup?.numberOfRockhoppers),
 }
 
 export const getInputRegisterReads = (category, setup) => {

@@ -8,6 +8,8 @@ import DeviceCard_VSD from './components/DeviceCard_VSD'
 import DeviceCard_GATE from './components/DeviceCard_GATE'
 import DeviceCard_SYSTEM from './components/DeviceCard_SYSTEM'
 import DeviceCard_INTERFACE from './components/DeviceCard_INTERFACE'
+import DeviceCard_MODBUS_DEVICE from './components/DeviceCard_MODBUS_DEVICE'
+import DeviceCard_ROCKHOPPER from './components/DeviceCard_ROCKHOPPER'
 import { resetSetupData } from './modbus/decoders'
 import {
 	DEFAULT_MODBUS_SLAVE_ADDRESS,
@@ -24,7 +26,6 @@ import {
 } from './modbus/setupSchema_GATE'
 import { PERIPHERAL_SETUP_MAX_COUNT } from './modbus/setupSchema_Peripheral'
 import { EXTERNAL_SIGNAL_SETUP_MAX_COUNT } from './modbus/setupSchema_ExternalSignal'
-import { ROCKHOPPER_SETUP_MAX_COUNT } from './modbus/setupSchema_Rockhopper'
 
 const readStoredSlaveAddress = () => {
 	const stored = Number(localStorage.getItem(MODBUS_SLAVE_ADDRESS_STORAGE_KEY))
@@ -44,7 +45,7 @@ const CATEGORY_DEFINITIONS = [
 	{ id: 'extSignals', label: 'Ext Signals', icon: 'extSignals', countField: 'nubmberOfExtSignals', enabled: true },
 	{ id: 'interfaces', label: 'Interfaces', icon: 'interfaces', countField: 'numberOfInterfaces', enabled: true },
 	{ id: 'rockhoppers', label: 'Rockhoppers', icon: 'rockhoppers', countField: 'numberOfRockhoppers', enabled: true },
-	{ id: 'globalCtrlDevices', label: 'Global Ctrl Devices', icon: 'globalCtrlDevices', countField: 'numberOfGlobalCtrlDevices', enabled: true },
+	{ id: 'globalCtrlDevices', label: 'Glob. Ctrl Devices', icon: 'globalCtrlDevices', countField: 'numberOfGlobalCtrlDevices', enabled: true },
 ]
 
 const SYSTEM_SETUP_BIT_FIELDS = new Set(
@@ -115,15 +116,18 @@ function App() {
 	const [greenBoxSetup, setGreenBoxSetup] = useState(null)
 	const [systemSetups, setSystemSetups] = useState([])
 	const [gateSetups, setGateSetups] = useState([])
+	const [gateRuntimeData, setGateRuntimeData] = useState([])
 	const [vsdSetups, setVsdSetups] = useState([])
 	const [vsdRuntimeData, setVsdRuntimeData] = useState([])
 	const [workstationSetups, setWorkstationSetups] = useState([])
 	const [modbusDeviceSetups, setModbusDeviceSetups] = useState([])
+	const [modbusDeviceRuntimeData, setModbusDeviceRuntimeData] = useState([])
 	const [interfaceSetups, setInterfaceSetups] = useState([])
 	const [interfaceRuntimeData, setInterfaceRuntimeData] = useState([])
 	const [peripheralSetups, setPeripheralSetups] = useState([])
 	const [externalSignalSetups, setExternalSignalSetups] = useState([])
 	const [rockhopperSetups, setRockhopperSetups] = useState([])
+	const [rockhopperRuntimeData, setRockhopperRuntimeData] = useState([])
 	const [globalCtrlDeviceSetups, setGlobalCtrlDeviceSetups] = useState([])
 	const [communicationStatus, setCommunicationStatus] = useState([])
 	const [slaveAddress, setSlaveAddress] = useState(readStoredSlaveAddress)
@@ -152,15 +156,18 @@ function App() {
 		setGreenBoxSetup(null)
 		setSystemSetups([])
 		setGateSetups([])
+		setGateRuntimeData([])
 		setVsdSetups([])
 		setVsdRuntimeData([])
 		setWorkstationSetups([])
 		setModbusDeviceSetups([])
+		setModbusDeviceRuntimeData([])
 		setInterfaceSetups([])
 		setInterfaceRuntimeData([])
 		setPeripheralSetups([])
 		setExternalSignalSetups([])
 		setRockhopperSetups([])
+		setRockhopperRuntimeData([])
 		setGlobalCtrlDeviceSetups([])
 		resetSetupData()
 		setSetupProgress({ loaded: 0, total: HOLDING_REGISTER_READS.length })
@@ -216,6 +223,12 @@ function App() {
 				next[decodedData.gateIndex] = decodedData.gateSetup
 				return next
 			})
+		} else if (read.decoder === 'gateRuntime') {
+			setGateRuntimeData((current) => {
+				const next = [...current]
+				next[decodedData.gateIndex] = decodedData.gateRuntime
+				return next
+			})
 		} else if (read.decoder === 'vsdSetup') {
 			setVsdSetups((current) => {
 				const next = [...current]
@@ -238,6 +251,12 @@ function App() {
 			setModbusDeviceSetups((current) => {
 				const next = [...current]
 				next[decodedData.modbusDeviceIndex] = decodedData.modbusDeviceSetup
+				return next
+			})
+		} else if (read.decoder === 'modbusDeviceRuntime') {
+			setModbusDeviceRuntimeData((current) => {
+				const next = [...current]
+				next[decodedData.modbusDeviceIndex] = decodedData.modbusDeviceRuntime
 				return next
 			})
 		} else if (read.decoder === 'interfaceSetup') {
@@ -268,6 +287,12 @@ function App() {
 			setRockhopperSetups((current) => {
 				const next = [...current]
 				next[decodedData.rockhopperIndex] = decodedData.rockhopperSetup
+				return next
+			})
+		} else if (read.decoder === 'rockhopperRuntime') {
+			setRockhopperRuntimeData((current) => {
+				const next = [...current]
+				next[decodedData.rockhopperIndex] = decodedData.rockhopperRuntime
 				return next
 			})
 		} else if (read.decoder === 'globalCtrlDeviceSetup') {
@@ -461,6 +486,7 @@ function App() {
 							<DeviceCard_GATE
 								deviceCount={greenBoxSetup?.numberOfGates}
 								devices={gateSetups}
+								runtimeData={gateRuntimeData}
 							/>
 						)}
 
@@ -533,37 +559,11 @@ function App() {
 						)}
 
 						{activeCategory === 'modbusDevices' && (
-							<div className="modbus-device-table-wrapper">
-								<table className="modbus-device-table">
-									<thead>
-										<tr>
-											<th scope="col">ID</th>
-											<th scope="col">Name</th>
-											<th scope="col">Port</th>
-											<th scope="col">Addr.</th>
-											<th scope="col">Model</th>
-										</tr>
-									</thead>
-									<tbody>
-										{Array.from({ length: greenBoxSetup?.numberOfModbusDevices || 0 }).map((_, index) => (
-											<tr className="modbus-device-table-row" key={index}>
-												<td className="modbus-device-id-cell">
-													{modbusDeviceSetups[index]?.modbusDeviceId ?? '---'}
-												</td>
-												<td className="modbus-device-name-cell">
-													{modbusDeviceSetups[index]?.name?.trim() || `Modbus Device ${index + 1}`}
-												</td>
-												<td>{modbusDeviceSetups[index]?.port ?? '---'}</td>
-												<td>{modbusDeviceSetups[index]?.address ?? '---'}</td>
-														<td>{modbusDeviceSetups[index]?.model?.trim() || '---'}</td>
-											</tr>
-										))}
-									</tbody>
-								</table>
-								{!greenBoxSetup?.numberOfModbusDevices && (
-									<p className="content-placeholder">No Modbus devices reported yet.</p>
-								)}
-							</div>
+							<DeviceCard_MODBUS_DEVICE
+								deviceCount={greenBoxSetup?.numberOfModbusDevices}
+								devices={modbusDeviceSetups}
+								runtimeData={modbusDeviceRuntimeData}
+							/>
 						)}
 
 						{activeCategory === 'interfaces' && (
@@ -662,49 +662,11 @@ function App() {
 						)}
 
 						{activeCategory === 'rockhoppers' && (
-							<div className="rockhopper-table-wrapper">
-								<table className="rockhopper-table">
-									<thead>
-										<tr>
-											<th scope="col">ID</th>
-											<th scope="col">Port</th>
-											<th scope="col">Addr.</th>
-											<th scope="col">Version</th>
-											<th scope="col">Name</th>
-											<th scope="col">Master Term.</th>
-											<th scope="col">Slave Term.</th>
-										</tr>
-									</thead>
-									<tbody>
-										{Array.from({ length: Math.min(greenBoxSetup?.numberOfRockhoppers || 0, ROCKHOPPER_SETUP_MAX_COUNT) }).map((_, index) => {
-											const rockhopper = rockhopperSetups[index]
-
-											return (
-												<tr className="rockhopper-table-row" key={index}>
-													<td className="rockhopper-id-cell">{rockhopper?.rockhopperId ?? '---'}</td>
-													<td>{rockhopper?.port ?? '---'}</td>
-														<td>{rockhopper?.address ?? '---'}</td>
-													<td>{rockhopper?.version ?? '---'}</td>
-													<td className="rockhopper-name-cell">{rockhopper?.name?.trim() || `Rockhopper ${index + 1}`}</td>
-													<td className="rockhopper-bit-cell">
-														<span className={`system-setup-item-value system-setup-bit-value ${rockhopper?.terminatingMaster ? 'on' : 'off'}`} title={rockhopper?.terminatingMaster ? 'ON' : 'OFF'}>
-															{rockhopper?.terminatingMaster ? '✓' : '✕'}
-														</span>
-													</td>
-													<td className="rockhopper-bit-cell">
-														<span className={`system-setup-item-value system-setup-bit-value ${rockhopper?.terminatingSlave ? 'on' : 'off'}`} title={rockhopper?.terminatingSlave ? 'ON' : 'OFF'}>
-															{rockhopper?.terminatingSlave ? '✓' : '✕'}
-														</span>
-													</td>
-												</tr>
-											)
-										})}
-									</tbody>
-								</table>
-								{!greenBoxSetup?.numberOfRockhoppers && (
-									<p className="content-placeholder">No Rockhoppers reported yet.</p>
-								)}
-							</div>
+							<DeviceCard_ROCKHOPPER
+								deviceCount={greenBoxSetup?.numberOfRockhoppers}
+								devices={rockhopperSetups}
+								runtimeData={rockhopperRuntimeData}
+							/>
 						)}
 
 						{activeCategory === 'globalCtrlDevices' && (
@@ -722,7 +684,7 @@ function App() {
 			</main>
 
 			<footer className="app-footer">
-				greenBOX Modbus-Master Tester v1.0 | Ecogate Inc.
+				greenBOX Modbus-Master Tester (version 1 - 16.9.2026) | Ecogate Inc.
 			</footer>
 		</div>
 	)

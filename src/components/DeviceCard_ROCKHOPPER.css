@@ -1,0 +1,368 @@
+.rockhopper-tile-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(23rem, 1fr));
+	gap: 0.75rem;
+	align-items: start;
+}
+
+.rockhopper-tile {
+	border: 1px solid #3b4c4a;
+	border-radius: 0.375rem;
+	background-color: #181c1c;
+	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
+	overflow: hidden;
+}
+
+.rockhopper-tile-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	padding: 0.625rem 0.75rem;
+	border-bottom: 1px solid #333;
+	background-color: #202727;
+}
+
+.rockhopper-title-row {
+	display: flex;
+	align-items: baseline;
+	gap: 0.5rem;
+	min-width: 0;
+}
+
+.rockhopper-tile-label {
+	overflow: hidden;
+	color: #fff;
+	font-family: 'Courier New', monospace;
+	font-size: 20px;
+	font-weight: 700;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.rockhopper-tile-id {
+	flex: 0 0 auto;
+	color: #7ad6c7;
+	font-size: 11px;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+
+.rockhopper-tile-meta {
+	display: flex;
+	flex-wrap: nowrap;
+	align-items: flex-end;
+	gap: 0.5rem;
+	color: #c4d269;
+	font-family: 'Courier New', monospace;
+	font-size: 11px;
+	white-space: nowrap;
+}
+
+.rockhopper-runtime-section {
+	padding: 0.625rem 0.75rem;
+}
+
+.rockhopper-runtime-section {
+	background-color: #141818;
+}
+
+.rockhopper-runtime-section h3 {
+	margin: 0 0 0.375rem;
+	color: #aaa;
+	font-size: 11px;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+.rockhopper-panel-heading {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	margin-bottom: 0.5rem;
+}
+
+.rockhopper-panel-heading h3 {
+	margin-bottom: 0;
+}
+
+.rockhopper-header-communication {
+	display: inline-flex;
+	align-items: baseline;
+	gap: 0.25rem;
+	color: #7f918e;
+	font-size: 10px;
+	font-weight: 700;
+	text-transform: uppercase;
+}
+
+.rockhopper-header-communication strong {
+	color: #d2df79;
+	font-family: 'Courier New', monospace;
+	font-size: 14px;
+}
+
+.rockhopper-termination-status {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.45rem;
+	align-items: center;
+	justify-content: center;
+	margin-inline: auto;
+}
+
+.rockhopper-termination-item {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25rem;
+	color: #7f918e;
+	font-size: 10px;
+	font-weight: 700;
+	text-transform: uppercase;
+}
+
+.rockhopper-termination-badge {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.35rem;
+	height: 1.35rem;
+	border: 1px solid #8a3838;
+	border-radius: 4px;
+	background-color: #3a1717;
+	color: #ff7c7c;
+	font-family: 'Trebuchet MS', sans-serif;
+	font-size: 12px;
+	font-weight: 900;
+}
+
+.rockhopper-termination-badge.active {
+	border-color: #4eaa78;
+	background-color: #173a28;
+	color: #77e3a3;
+}
+.rockhopper-sensor-table {
+	width: 100%;
+	border-collapse: collapse;
+	background-color: #111515;
+	color: #bbb;
+	font-size: 11px;
+}
+
+.rockhopper-sensor-table th,
+.rockhopper-sensor-table td {
+	padding: 0.3rem 0.25rem;
+	border: 1px solid #303b3a;
+	text-align: center;
+	white-space: nowrap;
+}
+
+.rockhopper-sensor-table thead th {
+	background-color: #202727;
+	color: #7ad6c7;
+	font-size: 10px;
+	font-weight: 700;
+	text-transform: uppercase;
+}
+
+.rockhopper-sensor-table tbody th,
+.rockhopper-sensor-table td {
+	font-family: 'Courier New', monospace;
+}
+
+.rockhopper-sensor-table tbody th {
+	color: #7ad6c7;
+	font-weight: 700;
+}
+
+.rockhopper-sensor-table .rockhopper-analog-cell {
+	color: #f0f4e3;
+	font-size: 15px;
+	font-weight: 700;
+	text-align: right;
+}
+
+.rockhopper-error-bit {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 2.5rem;
+	min-height: 1.25rem;
+	padding: 0.1rem 0.35rem;
+	border: 1px solid #35514b;
+	border-radius: 4px;
+	background-color: #17362f;
+	color: #8ce8cf;
+	font-family: 'Trebuchet MS', sans-serif;
+	font-size: 10px;
+	font-weight: 700;
+}
+
+.rockhopper-error-bit.active {
+	border-color: #a04848;
+	background-color: #421a1a;
+	color: #ff8b8b;
+}
+
+.rockhopper-runtime-indicators {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 0.6rem 0.85rem;
+	padding-top: 0.625rem;
+}
+
+.rockhopper-indicator-caption {
+	display: block;
+	margin-bottom: 0.3rem;
+	color: #7f918e;
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+
+.rockhopper-indicator-list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.25rem;
+}
+
+.rockhopper-indicator {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 1.45rem;
+	padding: 0 0.3rem;
+	border: 1px solid #34403e;
+	border-radius: 4px;
+	background-color: #1d2423;
+	color: #63706e;
+	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+	font-size: 12px;
+	font-weight: 500;
+	letter-spacing: 0.03em;
+}
+
+.rockhopper-indicator.active {
+	border-color: #55c8a8;
+	background-color: #193b32;
+	color: #8ce8cf;
+	box-shadow: inset 0 0 0 1px rgba(85, 200, 168, 0.12);
+}
+
+.rockhopper-indicator.warning.active {
+	border-color: #d9ae4f;
+	background-color: #40351c;
+	color: #ffd777;
+}
+
+.rockhopper-indicator.error.active {
+	border-color: #a04848;
+	background-color: #421a1a;
+	color: #ff8b8b;
+}
+
+.rockhopper-extended-panel {
+	margin-top: 0.625rem;
+	padding-top: 0.625rem;
+	border-top: 1px solid #303b3a;
+}
+
+.rockhopper-panel-errors {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+	align-items: center;
+	justify-content: flex-end;
+	color: #7f918e;
+	font-size: 10px;
+	font-weight: 700;
+	text-transform: uppercase;
+}
+
+.rockhopper-panel-errors span {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25rem;
+}
+
+.rockhopper-runtime-reading-grid {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(5.5rem, 1fr));
+	border-top: 1px solid #303b3a;
+	border-left: 1px solid #303b3a;
+}
+
+.rockhopper-runtime-reading {
+	min-width: 0;
+	padding: 0.45rem 0.5rem;
+	border-right: 1px solid #303b3a;
+	border-bottom: 1px solid #303b3a;
+	background-color: #111515;
+}
+
+.rockhopper-runtime-reading > span {
+	display: block;
+	margin-bottom: 0.125rem;
+	color: #7f918e;
+	font-size: 9px;
+	font-weight: 700;
+	text-transform: uppercase;
+}
+
+.rockhopper-runtime-reading div {
+	display: flex;
+	align-items: baseline;
+	gap: 0.25rem;
+	justify-content: flex-end;
+	min-width: 0;
+}
+
+.rockhopper-runtime-reading strong {
+	min-width: 0;
+	overflow: hidden;
+	color: #f0f4e3;
+	font-family: 'Courier New', monospace;
+	font-size: 17px;
+	font-weight: 700;
+	text-align: right;
+	text-overflow: ellipsis;
+}
+
+.rockhopper-runtime-reading small {
+	color: #7ad6c7;
+	font-family: 'Courier New', monospace;
+	font-size: 9px;
+}
+
+@media (max-width: 760px) {
+	.rockhopper-tile-grid {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.rockhopper-tile-header,
+	.rockhopper-panel-heading {
+		align-items: flex-start;
+		flex-direction: column;
+	}
+
+	.rockhopper-tile-meta {
+		align-items: flex-start;
+	}
+
+	.rockhopper-title-row {
+		align-items: flex-start;
+		flex-direction: column;
+		gap: 0.125rem;
+	}
+
+	.rockhopper-runtime-indicators,
+	.rockhopper-runtime-reading-grid {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.rockhopper-panel-errors {
+		justify-content: flex-start;
+	}
+}

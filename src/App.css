@@ -513,57 +513,6 @@ body {
 	font-weight: 700;
 }
 
-.modbus-device-table-wrapper {
-	width: 100%;
-	overflow-x: auto;
-}
-
-.modbus-device-table {
-	width: 100%;
-	border-collapse: collapse;
-	table-layout: auto;
-	background-color: #181818;
-}
-
-.modbus-device-table th,
-.modbus-device-table td {
-	padding: 0.25rem 0.3rem;
-	border-bottom: 1px solid #333;
-	text-align: left;
-}
-
-.modbus-device-table th {
-	position: sticky;
-	top: 0;
-	background-color: #111;
-	color: #7ad6c7;
-	font-size: 11px;
-	letter-spacing: 0.05em;
-	text-transform: uppercase;
-}
-
-.modbus-device-table-row td {
-	color: #ddd;
-	font-family: 'Courier New', monospace;
-	font-size: 13px;
-}
-
-.modbus-device-id-cell {
-	color: #7ad6c7 !important;
-	font-size: 16px !important;
-	font-weight: 700;
-}
-
-.modbus-device-name-cell {
-	overflow: hidden;
-	color: #fff !important;
-	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
-	font-size: 15px !important;
-	font-weight: 700;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-
 .peripheral-table-wrapper {
 	width: 100%;
 	overflow-x: auto;
@@ -715,66 +664,10 @@ body {
 	font-weight: 700;
 }
 
-.rockhopper-table-wrapper {
-	width: 100%;
-	overflow-x: auto;
-}
-
-.rockhopper-table {
-	width: 100%;
-	border-collapse: collapse;
-	table-layout: auto;
-	background-color: #181818;
-}
-
-.rockhopper-table th,
-.rockhopper-table td {
-	padding: 0.25rem 0.3rem;
-	border-bottom: 1px solid #333;
-	text-align: left;
-}
-
-.rockhopper-table th {
-	position: sticky;
-	top: 0;
-	background-color: #111;
-	color: #7ad6c7;
-	font-size: 11px;
-	letter-spacing: 0.05em;
-	text-transform: uppercase;
-}
-
-.rockhopper-table-row td {
-	color: #ddd;
-	font-family: 'Courier New', monospace;
-	font-size: 13px;
-}
-
-.rockhopper-id-cell {
-	color: #7ad6c7 !important;
-	font-size: 16px !important;
-	font-weight: 700;
-}
-
-.rockhopper-name-cell {
-	overflow: hidden;
-	color: #fff !important;
-	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
-	font-size: 15px !important;
-	font-weight: 700;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-
-.rockhopper-bit-cell {
-	text-align: left !important;
-}
-
 .app-footer {
-	flex-shrink: 0;
 	padding: 0.625rem;
-	color: #555;
-	font-size: 12px;
+	color: #0d5c0b;
+	font-size: 13px;
 	text-align: center;
 }
 
