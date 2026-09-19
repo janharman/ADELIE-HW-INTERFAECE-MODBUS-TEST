@@ -157,7 +157,7 @@ const SerialManager = forwardRef((props, ref) => {
 	};
 
 	useImperativeHandle(ref, () => ({
-		async sendAndReceive(dataArray) {
+		async sendAndReceive(dataArray, timeoutMs = 500) {
 			if (!portRef.current?.writable) throw new Error("Port not connected");
 			incomingBuffer.current = [];
 			const registerCount = (dataArray[4] << 8) | dataArray[5];
@@ -169,7 +169,7 @@ const SerialManager = forwardRef((props, ref) => {
 						responseWaiterRef.current = null;
 						reject(new Error('Serial response timeout'));
 					}
-				}, 500);
+				}, timeoutMs);
 
 				responseWaiterRef.current = { expectedLength, resolve, reject, timeoutId };
 			});

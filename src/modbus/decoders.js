@@ -23,6 +23,8 @@ import {
 } from './setupSchema_GATE'
 import {
 	GATE_ERROR_TYPE_BITS,
+	GATE_OPEN_REQUEST_BITS,
+	GATE_OPEN_REQUEST_LABELS,
 	GATE_INPUT_STATUS_BITS,
 	GATE_JUMPER_FUNCTION_LABELS,
 	GATE_STATUS_BITS,
@@ -316,11 +318,30 @@ const toSigned16 = (value) => (value > 0x7fff ? value - 0x10000 : value)
 // CleaningZone (System runtime, high byte of register 18) is a signed byte: 0xff means "-1" (no zone chosen).
 const toSigned8 = (value) => (value > 0x7f ? value - 0x100 : value)
 
+const humanizeOpenRequestLabel = (label) => label
+	.split('__').pop()
+	.split('_')
+	.map((word, index) => {
+		if (word === 'AF' || word === 'VFD') return word
+		const normalizedWord = word.toLowerCase()
+		return index === 0
+			? `${normalizedWord.charAt(0).toUpperCase()}${normalizedWord.slice(1)}`
+			: normalizedWord
+	})
+	.join(' ')
+
 const decodeGateRuntime = (response, frame) => {
 	if (!isValidReadResponse(response, frame)) return null
 
 	const gateStatusRegister = getRegister(response, 1)
 	const errorTypeRegister = getRegister(response, 4)
+	const openRequestRegister = getRegister(response, 12)
+	const openRequest = openRequestRegister & 0xffff
+	const openRequestName = openRequest === 0
+		? GATE_OPEN_REQUEST_LABELS.none
+		: Object.entries(GATE_OPEN_REQUEST_BITS)
+			.filter(([name]) => name !== 'none')
+			.find(([, bit]) => ((openRequest >> bit) & 1) === 1)?.[0]
 	const jumperFunction = (errorTypeRegister >> 8) & 0xff
 	const values = {
 		communicationStatus: getRegister(response, 0),
@@ -339,6 +360,13 @@ const decodeGateRuntime = (response, frame) => {
 		chipTemperature: getRegister(response, 8),
 		chipTemperatureCelsius: getRegister(response, 8) / 2,
 		position: getRegister(response, 9),
+		openRequest,
+		openRequestBits: decodeBits(openRequest, GATE_OPEN_REQUEST_BITS),
+		openRequestLabel: humanizeOpenRequestLabel(
+			GATE_OPEN_REQUEST_LABELS[openRequestName ?? 'none'],
+		),
+		gateAirVelocity: getRegister(response, 14),
+		gateAirVolume: getRegister(response, 16),
 	}
 
 	gateRuntimeData[frame.gateIndex] = { ...createEmptyGateRuntime(), ...values }

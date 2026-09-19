@@ -1,5 +1,26 @@
 import './DeviceCard_SYSTEM.css'
 
+const SYSTEM_STATUS_LABELS = {
+	S: 'Stop',
+	I: 'Idle',
+	D: 'Delay',
+	R: 'Running',
+	F: 'Delay Off',
+	C: 'Cleaning',
+	U: 'Clean-Up',
+	B: 'Bypass',
+	P: 'Full-Power',
+	E: 'Error',
+	T: 'Test',
+	M: 'VFD Manual',
+	G: 'External Cleaning',
+}
+
+const formatSystemStatus = (status) => {
+	if (!status) return '-'
+	return SYSTEM_STATUS_LABELS[status] ? `${status} - ${SYSTEM_STATUS_LABELS[status]}` : status
+}
+
 // Runtime fields grouped for display, mirroring the setup groups layout below them.
 const RUNTIME_DATA_GROUP = [
 	{ label: 'Total Time', field: 'totalTime', unit: 's' },
@@ -70,7 +91,7 @@ function DeviceCard_SYSTEM({ deviceCount, devices, runtimeData = [], expandedDev
 									<span className="system-setup-group-title">Status:</span>
 									<span className="system-setup-item">
 										<span className="system-setup-item-label">Sts</span>
-										<span className="system-setup-item-value">{runtime.status || '-'}</span>
+										<span className="system-setup-item-value">{formatSystemStatus(runtime.status)}</span>
 									</span>
 									<span className="system-setup-item">
 										<span className="system-setup-item-label">Rts</span>

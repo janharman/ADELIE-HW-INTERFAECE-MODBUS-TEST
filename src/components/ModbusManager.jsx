@@ -7,6 +7,7 @@ import {
 	createReadFrame,
 	isValidReadResponse,
 	matchesSlaveAddress,
+	getRegister,
 	READ_HOLDING_REGISTERS,
 	READ_INPUT_REGISTERS,
 } from '../modbus/modbusProtocol'
@@ -15,6 +16,7 @@ import {
 	greenBOX_Setup,
 	resetSetupData,
 } from '../modbus/decoders'
+import { recordRegisters, resetRegisterStore } from '../modbus/registerStore'
 import { buildSystemSetupReads } from '../modbus/setupSchema_System'
 import { buildGateSetupReads } from '../modbus/setupSchema_GATE'
 import { buildVsdSetupReads } from '../modbus/setupSchema_VSD'
@@ -80,11 +82,17 @@ function ModbusManager({
 		const sendRead = async (read) => {
 			const frame = createReadFrame(slaveAddressRef.current, read.functionCode, read.address, read.count)
 			let response
+			//onCommunicationStatusRef.current?.(
+			//	read.name,
+			//	null,
+			//	0,
+			//	`Request address ${read.address}, ${read.count} registers`,
+			//)
 
 			try {
-				response = await serialRef.current.sendAndReceive(frame)
+				response = await serialRef.current.sendAndReceive(frame, 500)
 			} catch (error) {
-				onCommunicationStatusRef.current?.(read.name, false)
+				onCommunicationStatusRef.current?.(read.name, false, 0, error.message)
 				throw error
 			}
 
@@ -93,15 +101,24 @@ function ModbusManager({
 
 			const successful = matchesSlaveAddress(response, slaveAddressRef.current)
 				&& isValidReadResponse(response, read)
-			onCommunicationStatusRef.current?.(read.name, successful, response.length)
+			const errorMessage = successful
+				? ''
+				: `Expected ${read.count * 2 + 5} B, received ${response.length} B (slave ${response[0] ?? '---'}, function ${response[1] ?? '---'})`
+			onCommunicationStatusRef.current?.(read.name, successful, response.length, errorMessage)
 
-			if (!successful) throw new Error(`Invalid response for ${read.name}`)
+			if (!successful) throw new Error(errorMessage)
+
+			// Keep the raw register words too, independent of decoding, for the register viewer.
+			const space = read.functionCode === READ_HOLDING_REGISTERS ? 'holding' : 'input'
+			const values = Array.from({ length: read.count }, (_, offset) => getRegister(response, offset))
+			recordRegisters(space, read.address, values)
 		}
 
 		const resetCycle = () => {
 			phase = 'setup'
 			readIndex = 0
 			resetSetupData()
+			resetRegisterStore()
 			onSetupProgressRef.current?.(0, HOLDING_REGISTER_READS.length)
 		}
 
@@ -160,8 +177,13 @@ function ModbusManager({
 				}
 			} catch (error) {
 				if (!cancelled) {
-					resetCycle()
-					onErrorRef.current?.(error)
+					if (phase === 'setup') {
+						resetCycle()
+						onErrorRef.current?.(error)
+					} else {
+						// A runtime frame may be unsupported for one device category; keep the completed setup intact.
+						readIndex += 1
+					}
 				}
 			}
 

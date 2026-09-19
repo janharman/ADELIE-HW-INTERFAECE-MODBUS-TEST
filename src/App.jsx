@@ -10,7 +10,10 @@ import DeviceCard_SYSTEM from './components/DeviceCard_SYSTEM'
 import DeviceCard_INTERFACE from './components/DeviceCard_INTERFACE'
 import DeviceCard_MODBUS_DEVICE from './components/DeviceCard_MODBUS_DEVICE'
 import DeviceCard_ROCKHOPPER from './components/DeviceCard_ROCKHOPPER'
+import RegisterTablePanel from './components/RegisterTablePanel'
 import { resetSetupData } from './modbus/decoders'
+import { resetRegisterStore } from './modbus/registerStore'
+import { REGISTER_CATALOG } from './modbus/registerCatalog'
 import {
 	DEFAULT_MODBUS_SLAVE_ADDRESS,
 	HOLDING_REGISTER_READS,
@@ -136,6 +139,8 @@ function App() {
 	const [setupReloadToken, setSetupReloadToken] = useState(0)
 	const [activeCategory, setActiveCategory] = useState(null)
 	const [expandedSystems, setExpandedSystems] = useState(() => new Set())
+	const [registerPanelMode, setRegisterPanelMode] = useState(null)
+	const [registerValueMode, setRegisterValueMode] = useState('dec')
 
 	const setupComplete = setupProgress.total > 0 && setupProgress.loaded >= setupProgress.total
 
@@ -172,6 +177,7 @@ function App() {
 		setRockhopperRuntimeData([])
 		setGlobalCtrlDeviceSetups([])
 		resetSetupData()
+		resetRegisterStore()
 		setSetupProgress({ loaded: 0, total: HOLDING_REGISTER_READS.length })
 	}
 
@@ -194,11 +200,11 @@ function App() {
 		resetSetupState()
 	}
 
-	const handleCommunicationStatus = (name, successful, byteCount = 0) => {
+	const handleCommunicationStatus = (name, successful, byteCount = 0, error = '') => {
 		setCommunicationStatus((current) => [
 			...current,
-			{ name, successful, byteCount },
-		].slice(-5))
+			{ name, successful, byteCount, error },
+		].slice(-20))
 	}
 
 	const handleSetupProgress = (loaded, total) => {
@@ -326,6 +332,11 @@ function App() {
 		})
 	}
 
+	// Toggle the holding/input registers panel; clicking the active button hides it again.
+	const toggleRegisterPanel = (mode) => {
+		setRegisterPanelMode((current) => (current === mode ? null : mode))
+	}
+
 	return (
 		<div className="app-container">
 			<ModbusManager
@@ -393,9 +404,12 @@ function App() {
 								{communicationStatus.length > 0 ? (
 									communicationStatus.map((entry, index) => (
 										<div className="communication-status-row" key={`${entry.name}-${index}`}>
-											<span>{entry.name} ...</span>
-												<strong className={entry.successful ? 'status-ok' : 'status-false'}>
-													{entry.byteCount} B
+											<span>
+												{entry.name} ...
+												{entry.error ? <small className="communication-status-error">{entry.error}</small> : null}
+											</span>
+												<strong className={entry.successful === null ? 'status-pending' : entry.successful ? 'status-ok' : 'status-false'}>
+													{entry.successful === null ? 'WAITING' : entry.error ? 'NO RESPONSE' : `${entry.byteCount} B`}
 												</strong>
 											</div>
 										))
@@ -418,6 +432,22 @@ function App() {
 										? `v${greenBoxSetup.adeKerVersion} · ${greenBoxSetup.adeKerVersionDate.toString(16).toUpperCase()}`
 										: '---'}
 								</span>
+							</div>
+							<div className="register-view-buttons">
+								<button
+									className={`register-view-button${registerPanelMode === 'holding' ? ' active' : ''}`}
+									type="button"
+									onClick={() => toggleRegisterPanel('holding')}
+								>
+									HOLDING REGISTERS
+								</button>
+								<button
+									className={`register-view-button${registerPanelMode === 'input' ? ' active' : ''}`}
+									type="button"
+									onClick={() => toggleRegisterPanel('input')}
+								>
+									INPUT REGISTERS
+								</button>
 							</div>
 						</div>
 					</section>
@@ -493,7 +523,7 @@ function App() {
 
 						{activeCategory === 'gates' && (
 							<DeviceCard_GATE
-								deviceCount={greenBoxSetup?.numberOfGates}
+												deviceCount={gateSetups.length || greenBoxSetup?.numberOfGates}
 								devices={gateSetups}
 								runtimeData={gateRuntimeData}
 							/>
@@ -687,6 +717,54 @@ function App() {
 
 						{activeCategory && activeCategory !== 'systems' && activeCategory !== 'gates' && activeCategory !== 'vfds' && activeCategory !== 'workstations' && activeCategory !== 'modbusDevices' && activeCategory !== 'interfaces' && activeCategory !== 'peripherals' && activeCategory !== 'extSignals' && activeCategory !== 'rockhoppers' && activeCategory !== 'globalCtrlDevices' && (
 							<p className="content-placeholder">Coming soon.</p>
+						)}
+
+						{registerPanelMode && activeCategory && (
+							<div className="register-panel">
+								<div className="register-panel-header">
+									<h3 className="register-panel-title">
+										{registerPanelMode === 'holding' ? 'Holding Registers' : 'Input Registers'}
+										{' · '}
+										{CATEGORY_DEFINITIONS.find((category) => category.id === activeCategory)?.label}
+									</h3>
+									<div className="register-panel-toolbar">
+										<span className="register-panel-toolbar-label">Values</span>
+										<button
+											type="button"
+											className={`register-table-mode-button${registerValueMode === 'dec' ? ' active' : ''}`}
+											onClick={() => setRegisterValueMode('dec')}
+										>
+											DECIMAL
+										</button>
+										<button
+											type="button"
+											className={`register-table-mode-button${registerValueMode === 'hex' ? ' active' : ''}`}
+											onClick={() => setRegisterValueMode('hex')}
+										>
+											HEX
+										</button>
+									</div>
+								</div>
+								{(() => {
+									const catalogEntry = REGISTER_CATALOG[activeCategory]?.[registerPanelMode]
+									if (!catalogEntry) return <p className="content-placeholder">No data yet.</p>
+
+									const deviceCount = Math.min(
+										greenBoxSetup?.[catalogEntry.countField] || 0,
+										catalogEntry.maxCount ?? Infinity,
+									)
+
+									return (
+										<RegisterTablePanel
+											space={registerPanelMode}
+											deviceCount={deviceCount}
+											getAddress={catalogEntry.getAddress}
+											registerCount={catalogEntry.registerCount}
+											valueMode={registerValueMode}
+										/>
+									)
+								})()}
+							</div>
 						)}
 					</div>
 				</section>
