@@ -51,6 +51,13 @@ const DeviceCard_VSD = ({ index, setup, runtimeData, statusClassName }) => {
 			</header>
 
 			<div className="vsd-runtime-data">
+				<div className="vsd-ker-status-grid">
+					<div className={`vsd-ker-status ${runtimeData?.kerStatusGroup ?? 'unknown'}`}>
+						<strong>{runtimeData?.kerStatusLabel ?? 'UNKNOWN'}</strong>
+					</div>
+					<Reading label="KerPwrRequest" value={runtimeData?.kerPwrRequest} unit="" />
+				</div>
+
 				<div className="vsd-reading-grid">
 					<Reading label="Frequency" value={runtimeData?.outputFrequencyHertz} unit="Hz" decimalPlaces={1} />
 					<Reading label="Voltage" value={runtimeData?.outputVoltage} unit="V" />

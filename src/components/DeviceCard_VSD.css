@@ -59,6 +59,58 @@
 	position: relative;
 }
 
+.vsd-ker-status-grid {
+	display: grid;
+	grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+	gap: 0.5rem;
+	padding: 0.75rem 0.875rem 0;
+}
+
+.vsd-ker-status {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	align-items: center;
+	gap: 0.5rem;
+	min-width: 0;
+	padding: 0.5rem;
+	border: 1px solid #555;
+	border-radius: 0.25rem;
+	background: #242424;
+}
+
+.vsd-ker-status strong {
+	min-width: 0;
+	overflow: hidden;
+	color: #eee;
+	font-size: 1.25rem;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.vsd-ker-status.normal {
+	border-color: #198e6c;
+	background: #143c32;
+}
+
+.vsd-ker-status.warning {
+	border-color: #ba8b20;
+	background: #493811;
+}
+
+.vsd-ker-status.error {
+	border-color: #b34b4b;
+	background: #4a2020;
+}
+
+.vsd-ker-status.unknown {
+	border-color: #777;
+	background: #292929;
+}
+
+.vsd-ker-status-grid .vsd-reading-value-row strong {
+	font-size: 1.25rem;
+}
+
 .vsd-runtime-invalid {
 	position: absolute;
 	inset: 0;

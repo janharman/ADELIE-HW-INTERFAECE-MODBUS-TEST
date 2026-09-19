@@ -1,6 +1,24 @@
 export const VSD_RUNTIME_BASE_ADDRESS = 4000
-export const VSD_RUNTIME_ADDRESS_STRIDE = 20
-export const VSD_RUNTIME_REGISTER_COUNT = 16
+export const VSD_RUNTIME_ADDRESS_STRIDE = 22
+export const VSD_RUNTIME_REGISTER_COUNT = 20
+
+export const VSD_KER_STATUS_LABELS = {
+	0x2E: { label: 'RESETTING ERROR', group: 'warning' },
+	0x48: { label: 'DATA ERROR', group: 'error' },
+	0x49: { label: 'COMM ERROR', group: 'error' },
+	0x23: { label: 'VFD OFF WARN', group: 'warning' },
+	0x00: { label: 'VFD OFF', group: 'normal' },
+	0x4C: { label: 'IMMEDIATE STOP', group: 'error' },
+	0x4A: { label: 'VFD IN ERROR', group: 'error' },
+	0x4B: { label: 'ERR NOT READY', group: 'error' },
+	0x24: { label: 'VFD NOT ENABLED', group: 'warning' },
+	0x2D: { label: 'OTHER ALARM', group: 'error' },
+	0x26: { label: 'MANUAL', group: 'warning' },
+	0x25: { label: 'STOP MODE', group: 'warning' },
+	0x27: { label: 'LOCAL CTRL', group: 'warning' },
+	0x02: { label: 'RUNNING', group: 'normal' },
+	0x01: { label: 'STOP', group: 'normal' },
+}
 
 export const VSD_STATUS_LABELS = {
 	0: 'Communication Error',
@@ -42,6 +60,10 @@ export const getVsdRuntimeAddress = (vsdIndex) => (
 )
 
 export const createEmptyVsdRuntime = () => ({
+	kerStatus: 0,
+	kerStatusLabel: 'UNKNOWN',
+	kerStatusGroup: 'unknown',
+	kerPwrRequest: 0,
 	communicationStatus: 0,
 	status: 0,
 	statusLabel: VSD_STATUS_LABELS[0],

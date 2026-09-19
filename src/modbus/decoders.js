@@ -38,6 +38,7 @@ import {
 } from './setupSchema_VSD'
 import {
 	VSD_DIGITAL_INPUT_BITS,
+	VSD_KER_STATUS_LABELS,
 	VSD_STATUS_BITS,
 	VSD_STATUS_LABELS,
 	createEmptyVsdRuntime,
@@ -401,7 +402,13 @@ const decodeVsdRuntime = (response, frame) => {
 
 	const statusBits = getRegister(response, 2)
 	const digitalInputs = getRegister(response, 8)
+	const kerStatus = getRegister(response, 18)
+	const kerStatusInfo = VSD_KER_STATUS_LABELS[kerStatus]
 	const values = {
+		kerStatus,
+		kerStatusLabel: kerStatusInfo?.label ?? 'UNKNOWN',
+		kerStatusGroup: kerStatusInfo?.group ?? 'unknown',
+		kerPwrRequest: getRegister(response, 19),
 		communicationStatus: getRegister(response, 0),
 		status: getRegister(response, 1),
 		statusBits: Object.fromEntries(
