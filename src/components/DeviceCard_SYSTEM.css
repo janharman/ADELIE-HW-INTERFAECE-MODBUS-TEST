@@ -54,6 +54,19 @@
 	margin-top: 0.5rem;
 }
 
+.system-runtime-groups {
+	display: flex;
+	flex-direction: column;
+	gap: 0.375rem;
+}
+
+.system-runtime-group {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.375rem;
+}
+
 .system-setup-group {
 	display: flex;
 	flex-wrap: wrap;

@@ -9,6 +9,14 @@ import {
 	createEmptySystemSetup,
 } from './setupSchema_System'
 import {
+	SYSTEM_RUNTIME_MONITOR_SLOT_COUNT,
+	SYSTEM_RUNTIME_MONITOR_SLOT_REGISTER_COUNT,
+	SYSTEM_RUNTIME_MONITOR_START_OFFSET,
+	SYSTEM_STATUS_LETTER_COUNT,
+	SYSTEM_ZONE_OVERFLOW_WARNING_BITS,
+	createEmptySystemRuntime,
+} from './runtimeSchema_System'
+import {
 	GATE_SETUP_FIELDS,
 	GATE_SETUP_STRING_FIELDS,
 	createEmptyGateSetup,
@@ -101,6 +109,7 @@ import {
 
 export const greenBOX_Setup = createEmptyGreenBoxSetup()
 export const systemSetups = []
+export const systemRuntimeData = []
 export const gateSetups = []
 export const gateRuntimeData = []
 export const vsdSetups = []
@@ -202,6 +211,89 @@ const decodeSystemSetup = (response, frame) => {
 	return { systemIndex: frame.systemIndex, systemSetup: systemSetups[frame.systemIndex] }
 }
 
+// Monitor slots stop at the first empty (zero) register - remaining slots are treated as unused.
+const decodeSystemRuntimeMonitor = (response) => {
+	const monitorValues = []
+
+	for (let slot = 0; slot < SYSTEM_RUNTIME_MONITOR_SLOT_COUNT; slot += 1) {
+		const offset = SYSTEM_RUNTIME_MONITOR_START_OFFSET + slot * SYSTEM_RUNTIME_MONITOR_SLOT_REGISTER_COUNT
+		const infoRegister = getRegister(response, offset)
+		if (infoRegister === 0) break
+
+		const referenceChar = String.fromCharCode((infoRegister >> 8) & 0xff)
+		const errorCode = infoRegister & 0xff
+		const value = toSigned16(getRegister(response, offset + 1))
+
+		monitorValues.push({
+			referenceChar,
+			errorCode,
+			value,
+			display: errorCode === 0 ? `${referenceChar}:${value}` : `${referenceChar}-${errorCode}`,
+		})
+	}
+
+	return monitorValues
+}
+
+const decodeSystemRuntime = (response, frame) => {
+	if (!isValidReadResponse(response, frame)) return null
+
+	// Sts/Rts/W/E/ZOW are all 32-bit registers (2 Modbus words each).
+	const readDoubleWord = (address) => (getRegister(response, address) * 0x10000) + getRegister(response, address + 1)
+	// Rts/W/E hold one bit per letter: bit0='A' .. bit25='Z'. Build the string of active letters.
+	const decodeStatusLetters = (value) => Array.from(
+		{ length: SYSTEM_STATUS_LETTER_COUNT },
+		(_, bit) => ((value >> bit) & 1 ? String.fromCharCode(65 + bit) : ''),
+	).join('')
+
+	const cleaningRegister = getRegister(response, 18)
+
+	const values = {
+		// Sts is a single ASCII char in the low byte of register 0; register 1 is unused.
+		status: String.fromCharCode(getRegister(response, 0) & 0xff),
+		runTimeStatus: decodeStatusLetters(readDoubleWord(2)),
+		warnings: decodeStatusLetters(readDoubleWord(4)),
+		errors: decodeStatusLetters(readDoubleWord(6)),
+		zoneOverflowWarningBits: decodeBits(readDoubleWord(8), SYSTEM_ZONE_OVERFLOW_WARNING_BITS),
+		totalTime: (getRegister(response, 10) * 0x10000) + getRegister(response, 11),
+		runningTime: (getRegister(response, 12) * 0x10000) + getRegister(response, 13),
+		delayTime: getRegister(response, 14),
+		activeRunSignals: getRegister(response, 15) & 0xff,
+		gatesOpen: (getRegister(response, 15) >> 8) & 0xff,
+		gatesRequested: getRegister(response, 16) & 0xff,
+		gatesError: (getRegister(response, 16) >> 8) & 0xff,
+		vfdPowerKernel: getRegister(response, 17),
+		vfdPowerKernelPercent: getRegister(response, 17) / 10,
+		cleaningTime: cleaningRegister & 0xff,
+		cleaningZone: toSigned8((cleaningRegister >> 8) & 0xff),
+		qVel: getRegister(response, 22),
+		qVol: getRegister(response, 23),
+		qVolCubicMetersPerSecond: getRegister(response, 23) / 1000,
+		aVel: getRegister(response, 24),
+		aVol: getRegister(response, 25),
+		aVolCubicMetersPerSecond: getRegister(response, 25) / 1000,
+		gVel: getRegister(response, 26),
+		gVol: getRegister(response, 27),
+		gVolCubicMetersPerSecond: getRegister(response, 27) / 1000,
+		mVel: getRegister(response, 28),
+		mVol: getRegister(response, 29),
+		mVolCubicMetersPerSecond: getRegister(response, 29) / 1000,
+		cVel: getRegister(response, 30),
+		cVol: getRegister(response, 31),
+		cVolCubicMetersPerSecond: getRegister(response, 31) / 1000,
+		sVol: toSigned16(getRegister(response, 32)),
+		sVolPercent: toSigned16(getRegister(response, 32)) / 100,
+		systemUnderflowWarning: getRegister(response, 33),
+		systemUnderflowWarningPercent: getRegister(response, 33) / 100,
+		systemOverflowWarning: getRegister(response, 34),
+		systemOverflowWarningPercent: getRegister(response, 34) / 100,
+		monitorValues: decodeSystemRuntimeMonitor(response),
+	}
+
+	systemRuntimeData[frame.systemIndex] = { ...createEmptySystemRuntime(), ...values }
+	return { systemIndex: frame.systemIndex, systemRuntime: systemRuntimeData[frame.systemIndex] }
+}
+
 const decodeGateSetup = (response, frame) => {
 	if (!isValidReadResponse(response, frame)) return null
 
@@ -221,6 +313,8 @@ const decodeGateSetup = (response, frame) => {
 
 // Register 3 (Motor Current) is a signed 16-bit value: negative means "maximal current at last Op/Cl".
 const toSigned16 = (value) => (value > 0x7fff ? value - 0x10000 : value)
+// CleaningZone (System runtime, high byte of register 18) is a signed byte: 0xff means "-1" (no zone chosen).
+const toSigned8 = (value) => (value > 0x7f ? value - 0x100 : value)
 
 const decodeGateRuntime = (response, frame) => {
 	if (!isValidReadResponse(response, frame)) return null
@@ -617,6 +711,7 @@ const DECODERS = {
 	mainAppData: decodeMainAppData,
 	gbNameAndDescription: decodeGbNameAndDescription,
 	systemSetup: decodeSystemSetup,
+	systemRuntime: decodeSystemRuntime,
 	gateSetup: decodeGateSetup,
 	gateRuntime: decodeGateRuntime,
 	vsdSetup: decodeVsdSetup,
@@ -644,6 +739,7 @@ export const decodeHoldingResponse = (response, frame) => {
 export const resetSetupData = () => {
 	Object.assign(greenBOX_Setup, createEmptyGreenBoxSetup())
 	systemSetups.length = 0
+	systemRuntimeData.length = 0
 	gateSetups.length = 0
 	gateRuntimeData.length = 0
 	vsdSetups.length = 0

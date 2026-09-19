@@ -115,6 +115,7 @@ function App() {
 	const [isReading, setIsReading] = useState(false)
 	const [greenBoxSetup, setGreenBoxSetup] = useState(null)
 	const [systemSetups, setSystemSetups] = useState([])
+	const [systemRuntimeData, setSystemRuntimeData] = useState([])
 	const [gateSetups, setGateSetups] = useState([])
 	const [gateRuntimeData, setGateRuntimeData] = useState([])
 	const [vsdSetups, setVsdSetups] = useState([])
@@ -155,6 +156,7 @@ function App() {
 	const resetSetupState = () => {
 		setGreenBoxSetup(null)
 		setSystemSetups([])
+		setSystemRuntimeData([])
 		setGateSetups([])
 		setGateRuntimeData([])
 		setVsdSetups([])
@@ -215,6 +217,12 @@ function App() {
 			setSystemSetups((current) => {
 				const next = [...current]
 				next[decodedData.systemIndex] = decodedData.systemSetup
+				return next
+			})
+		} else if (read.decoder === 'systemRuntime') {
+			setSystemRuntimeData((current) => {
+				const next = [...current]
+				next[decodedData.systemIndex] = decodedData.systemRuntime
 				return next
 			})
 		} else if (read.decoder === 'gateSetup') {
@@ -474,6 +482,7 @@ function App() {
 							<DeviceCard_SYSTEM
 								deviceCount={greenBoxSetup?.numberOfSystems}
 								devices={systemSetups}
+								runtimeData={systemRuntimeData}
 								expandedDevices={expandedSystems}
 								onToggle={toggleSystemSetup}
 								setupGroups={SYSTEM_SETUP_GROUPS}

@@ -3,6 +3,7 @@ import { buildInterfaceRuntimeReads } from './runtimeSchema_Interface'
 import { buildGateRuntimeReads } from './runtimeSchema_GATE'
 import { buildModbusDeviceRuntimeReads } from './runtimeSchema_ModbusDevice'
 import { buildRockhopperRuntimeReads } from './runtimeSchema_Rockhopper'
+import { buildSystemRuntimeReads } from './runtimeSchema_System'
 
 export const DEFAULT_MODBUS_SLAVE_ADDRESS = 1
 export const MODBUS_SLAVE_ADDRESS_STORAGE_KEY = 'modbus_slave_address'
@@ -18,6 +19,7 @@ export const HOLDING_REGISTER_READS = [
 // Runtime (input-register) reads per active UI category. Each entry is a factory function so
 // it can build addresses dynamically (e.g. per system index) once that category's table exists.
 const CATEGORY_RUNTIME_READS = {
+	systems: (setup) => buildSystemRuntimeReads(setup?.numberOfSystems),
 	vfds: (setup) => buildVsdRuntimeReads(setup?.numberOfVfds),
 	interfaces: (setup) => buildInterfaceRuntimeReads(setup?.numberOfInterfaces),
 	gates: (setup) => buildGateRuntimeReads(setup?.numberOfGates),
