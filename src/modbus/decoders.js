@@ -335,10 +335,12 @@ const decodeGateRuntime = (response, frame) => {
 
 	const gateStatusRegister = getRegister(response, 1)
 	const errorTypeRegister = getRegister(response, 4)
-	const openRequestRegister = getRegister(response, 12)
+	// Only offsets within frame.count were actually requested; reading further would pick up
+	// CRC bytes or run past the response entirely, so fall back to 0 until count is raised.
+	const openRequestRegister = frame.count > 12 ? getRegister(response, 12) : 0
 	const openRequest = openRequestRegister & 0xffff
 	const openRequestName = openRequest === 0
-		? GATE_OPEN_REQUEST_LABELS.none
+		? 'none'
 		: Object.entries(GATE_OPEN_REQUEST_BITS)
 			.filter(([name]) => name !== 'none')
 			.find(([, bit]) => ((openRequest >> bit) & 1) === 1)?.[0]
@@ -365,8 +367,8 @@ const decodeGateRuntime = (response, frame) => {
 		openRequestLabel: humanizeOpenRequestLabel(
 			GATE_OPEN_REQUEST_LABELS[openRequestName ?? 'none'],
 		),
-		gateAirVelocity: getRegister(response, 14),
-		gateAirVolume: getRegister(response, 16),
+		gateAirVelocity: frame.count > 14 ? getRegister(response, 14) : 0,
+		gateAirVolume: frame.count > 16 ? getRegister(response, 16) : 0,
 	}
 
 	gateRuntimeData[frame.gateIndex] = { ...createEmptyGateRuntime(), ...values }

@@ -1,6 +1,6 @@
 export const GATE_RUNTIME_BASE_ADDRESS = 10000
 export const GATE_RUNTIME_ADDRESS_STRIDE = 20
-export const GATE_RUNTIME_REGISTER_COUNT = 12
+export const GATE_RUNTIME_REGISTER_COUNT = 18
 
 export const GATE_STATUS_BITS = {
 	open: 0,
