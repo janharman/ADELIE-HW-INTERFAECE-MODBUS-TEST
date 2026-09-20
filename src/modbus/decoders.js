@@ -77,6 +77,7 @@ import {
 	PERIPHERAL_SETUP_STRING_FIELDS,
 	createEmptyPeripheralSetup,
 } from './setupSchema_Peripheral'
+import { createEmptyPeripheralRuntime } from './runtimeSchema_Peripheral'
 import {
 	EXTERNAL_SIGNAL_SETUP_FIELDS,
 	EXTERNAL_SIGNAL_SETUP_GATE_COUNT,
@@ -84,6 +85,10 @@ import {
 	EXTERNAL_SIGNAL_SETUP_STRING_FIELDS,
 	createEmptyExternalSignalSetup,
 } from './setupSchema_ExternalSignal'
+import {
+	EXTERNAL_SIGNAL_RUNTIME_LETTER_COUNT,
+	createEmptyExternalSignalRuntime,
+} from './runtimeSchema_ExternalSignal'
 import {
 	ROCKHOPPER_SETUP_FIELDS,
 	ROCKHOPPER_SETUP_STRING_FIELDS,
@@ -123,7 +128,9 @@ export const modbusDeviceRuntimeData = []
 export const interfaceSetups = []
 export const interfaceRuntimeData = []
 export const peripheralSetups = []
+export const peripheralRuntimeData = []
 export const externalSignalSetups = []
+export const externalSignalRuntime = createEmptyExternalSignalRuntime()
 export const rockhopperSetups = []
 export const rockhopperRuntimeData = []
 export const globalCtrlDeviceSetups = []
@@ -629,6 +636,27 @@ const decodePeripheralSetup = (response, frame) => {
 	}
 }
 
+const decodePeripheralRuntime = (response, frame) => {
+	if (!isValidReadResponse(response, frame)) return null
+
+	const readDoubleWord = (address) => (getRegister(response, address) * 0x10000) + getRegister(response, address + 1)
+	const signedValue = readDoubleWord(0)
+	const values = {
+		signedValue: signedValue > 0x7fffffff ? signedValue - 0x100000000 : signedValue,
+		unsignedValue: readDoubleWord(2),
+	}
+
+	peripheralRuntimeData[frame.peripheralIndex] = {
+		...createEmptyPeripheralRuntime(),
+		...values,
+	}
+
+	return {
+		peripheralIndex: frame.peripheralIndex,
+		peripheralRuntime: peripheralRuntimeData[frame.peripheralIndex],
+	}
+}
+
 const decodeExternalSignalSetup = (response, frame) => {
 	if (!isValidReadResponse(response, frame)) return null
 
@@ -655,6 +683,21 @@ const decodeExternalSignalSetup = (response, frame) => {
 		externalSignalIndex: frame.externalSignalIndex,
 		externalSignalSetup: externalSignalSetups[frame.externalSignalIndex],
 	}
+}
+
+// Single 32-bit register, bit0='A' .. bit25='Z' - build the string of currently active letters.
+const decodeExternalSignalRuntime = (response, frame) => {
+	if (!isValidReadResponse(response, frame)) return null
+
+	const value = (getRegister(response, 0) * 0x10000) + getRegister(response, 1)
+	const activeLetters = Array.from(
+		{ length: EXTERNAL_SIGNAL_RUNTIME_LETTER_COUNT },
+		(_, bit) => ((value >> bit) & 1 ? String.fromCharCode(65 + bit) : ''),
+	).join('')
+
+	Object.assign(externalSignalRuntime, { activeLetters })
+
+	return { externalSignalRuntime }
 }
 
 const decodeRockhopperSetup = (response, frame) => {
@@ -759,7 +802,9 @@ const DECODERS = {
 	interfaceSetup: decodeInterfaceSetup,
 	interfaceRuntime: decodeInterfaceRuntime,
 	peripheralSetup: decodePeripheralSetup,
+	peripheralRuntime: decodePeripheralRuntime,
 	externalSignalSetup: decodeExternalSignalSetup,
+	externalSignalRuntime: decodeExternalSignalRuntime,
 	rockhopperSetup: decodeRockhopperSetup,
 	rockhopperRuntime: decodeRockhopperRuntime,
 	globalCtrlDeviceSetup: decodeGlobalCtrlDeviceSetup,
@@ -787,7 +832,9 @@ export const resetSetupData = () => {
 	interfaceSetups.length = 0
 	interfaceRuntimeData.length = 0
 	peripheralSetups.length = 0
+	peripheralRuntimeData.length = 0
 	externalSignalSetups.length = 0
+	Object.assign(externalSignalRuntime, createEmptyExternalSignalRuntime())
 	rockhopperSetups.length = 0
 	rockhopperRuntimeData.length = 0
 	globalCtrlDeviceSetups.length = 0

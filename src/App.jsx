@@ -129,7 +129,9 @@ function App() {
 	const [interfaceSetups, setInterfaceSetups] = useState([])
 	const [interfaceRuntimeData, setInterfaceRuntimeData] = useState([])
 	const [peripheralSetups, setPeripheralSetups] = useState([])
+	const [peripheralRuntimeData, setPeripheralRuntimeData] = useState([])
 	const [externalSignalSetups, setExternalSignalSetups] = useState([])
+	const [externalSignalRuntime, setExternalSignalRuntime] = useState(null)
 	const [rockhopperSetups, setRockhopperSetups] = useState([])
 	const [rockhopperRuntimeData, setRockhopperRuntimeData] = useState([])
 	const [globalCtrlDeviceSetups, setGlobalCtrlDeviceSetups] = useState([])
@@ -172,7 +174,9 @@ function App() {
 		setInterfaceSetups([])
 		setInterfaceRuntimeData([])
 		setPeripheralSetups([])
+		setPeripheralRuntimeData([])
 		setExternalSignalSetups([])
+		setExternalSignalRuntime(null)
 		setRockhopperSetups([])
 		setRockhopperRuntimeData([])
 		setGlobalCtrlDeviceSetups([])
@@ -291,12 +295,20 @@ function App() {
 				next[decodedData.peripheralIndex] = decodedData.peripheralSetup
 				return next
 			})
+		} else if (read.decoder === 'peripheralRuntime') {
+			setPeripheralRuntimeData((current) => {
+				const next = [...current]
+				next[decodedData.peripheralIndex] = decodedData.peripheralRuntime
+				return next
+			})
 		} else if (read.decoder === 'externalSignalSetup') {
 			setExternalSignalSetups((current) => {
 				const next = [...current]
 				next[decodedData.externalSignalIndex] = decodedData.externalSignalSetup
 				return next
 			})
+		} else if (read.decoder === 'externalSignalRuntime') {
+			setExternalSignalRuntime(decodedData.externalSignalRuntime)
 		} else if (read.decoder === 'rockhopperSetup') {
 			setRockhopperSetups((current) => {
 				const next = [...current]
@@ -620,6 +632,8 @@ function App() {
 										<tr>
 											<th scope="col">ID</th>
 											<th scope="col">Name</th>
+											<th scope="col">Value</th>
+											<th scope="col">Error</th>
 											<th scope="col">Source</th>
 											<th scope="col">Multiplier</th>
 											<th scope="col">Offset</th>
@@ -630,11 +644,14 @@ function App() {
 									<tbody>
 										{Array.from({ length: Math.min(greenBoxSetup?.numberOfPeripherals || 0, PERIPHERAL_SETUP_MAX_COUNT) }).map((_, index) => {
 											const peripheral = peripheralSetups[index]
+											const runtime = peripheralRuntimeData[index]
 
 											return (
 												<tr className="peripheral-table-row" key={index}>
 													<td className="peripheral-id-cell">{peripheral?.peripheralId ?? '---'}</td>
 													<td className="peripheral-name-cell">{peripheral?.name?.trim() || `Peripheral ${index + 1}`}</td>
+													<td>{runtime?.signedValue ?? '---'}</td>
+													<td>{runtime?.unsignedValue ?? '---'}</td>
 														<td>{peripheral?.source?.trim() || '---'}</td>
 													<td>{peripheral ? peripheral.multiplier.toFixed(3) : '---'}</td>
 													<td>{peripheral ? peripheral.offset.toFixed(3) : '---'}</td>
@@ -663,6 +680,7 @@ function App() {
 									<thead>
 										<tr>
 											<th scope="col">Ref</th>
+											<th scope="col">Active</th>
 											<th scope="col">Source</th>
 											<th scope="col">Fnc</th>
 											<th scope="col">Gates</th>
@@ -672,10 +690,14 @@ function App() {
 										{Array.from({ length: Math.min(greenBoxSetup?.nubmberOfExtSignals || 0, EXTERNAL_SIGNAL_SETUP_MAX_COUNT) }).map((_, index) => {
 											const signal = externalSignalSetups[index]
 											const gateIds = getWorkstationGateIds(signal?.gates)
+											const isActive = signal?.ref && externalSignalRuntime?.activeLetters?.includes(signal.ref)
 
 											return (
 												<tr className="external-signal-table-row" key={index}>
 													<td className="external-signal-ref-cell">{signal?.ref || '---'}</td>
+													<td>
+														<span className={`external-signal-active-led${isActive ? ' active' : ''}`} />
+													</td>
 													<td className="external-signal-source-cell">{signal?.source?.trim() || `Signal ${index + 1}`}</td>
 													<td>{signal?.functionCode?.trim() || '---'}</td>
 													<td className="external-signal-gates-cell">

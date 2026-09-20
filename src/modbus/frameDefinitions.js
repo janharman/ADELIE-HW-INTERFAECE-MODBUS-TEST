@@ -4,6 +4,8 @@ import { buildGateRuntimeReads } from './runtimeSchema_GATE'
 import { buildModbusDeviceRuntimeReads } from './runtimeSchema_ModbusDevice'
 import { buildRockhopperRuntimeReads } from './runtimeSchema_Rockhopper'
 import { buildSystemRuntimeReads } from './runtimeSchema_System'
+import { buildPeripheralRuntimeReads } from './runtimeSchema_Peripheral'
+import { buildExternalSignalRuntimeReads } from './runtimeSchema_ExternalSignal'
 
 export const DEFAULT_MODBUS_SLAVE_ADDRESS = 1
 export const MODBUS_SLAVE_ADDRESS_STORAGE_KEY = 'modbus_slave_address'
@@ -24,7 +26,9 @@ const CATEGORY_RUNTIME_READS = {
 	interfaces: (setup) => buildInterfaceRuntimeReads(setup?.numberOfInterfaces),
 	gates: (setup) => buildGateRuntimeReads(setup?.numberOfGates),
 	modbusDevices: (setup) => buildModbusDeviceRuntimeReads(setup?.numberOfModbusDevices),
+	peripherals: (setup) => buildPeripheralRuntimeReads(setup?.numberOfPeripherals),
 	rockhoppers: (setup) => buildRockhopperRuntimeReads(setup?.numberOfRockhoppers),
+	extSignals: (setup) => buildExternalSignalRuntimeReads(setup?.nubmberOfExtSignals),
 }
 
 export const getInputRegisterReads = (category, setup) => {

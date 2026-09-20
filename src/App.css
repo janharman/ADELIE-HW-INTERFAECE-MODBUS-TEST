@@ -744,6 +744,23 @@ body {
 	font-weight: 700;
 }
 
+.external-signal-active-led {
+	display: inline-block;
+	width: 0.7rem;
+	height: 0.7rem;
+	border: 1px solid #40504d;
+	border-radius: 50%;
+	background-color: #26302e;
+	box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.2);
+}
+
+.external-signal-active-led.active {
+	border-color: #8ce8cf;
+	background-color: #6dff79;
+	box-shadow: 0 0 0.35rem rgba(85, 200, 168, 0.75);
+}
+
+
 .app-footer {
 	padding: 0.625rem;
 	color: #0d5c0b;

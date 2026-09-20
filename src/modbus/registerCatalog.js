@@ -13,6 +13,7 @@ import { getModbusDeviceRuntimeAddress, MODBUS_DEVICE_RUNTIME_REGISTER_COUNT } f
 import { getInterfaceSetupAddress, INTERFACE_SETUP_REGISTER_COUNT, INTERFACE_SETUP_MAX_COUNT } from './setupSchema_Interface'
 import { getInterfaceRuntimeAddress, INTERFACE_RUNTIME_REGISTER_COUNT, INTERFACE_RUNTIME_MAX_COUNT } from './runtimeSchema_Interface'
 import { getPeripheralSetupAddress, PERIPHERAL_SETUP_REGISTER_COUNT, PERIPHERAL_SETUP_MAX_COUNT } from './setupSchema_Peripheral'
+import { getPeripheralRuntimeAddress, PERIPHERAL_RUNTIME_REGISTER_COUNT, PERIPHERAL_RUNTIME_MAX_COUNT } from './runtimeSchema_Peripheral'
 import { getExternalSignalSetupAddress, EXTERNAL_SIGNAL_SETUP_REGISTER_COUNT, EXTERNAL_SIGNAL_SETUP_MAX_COUNT } from './setupSchema_ExternalSignal'
 import { getRockhopperSetupAddress, ROCKHOPPER_SETUP_REGISTER_COUNT, ROCKHOPPER_SETUP_MAX_COUNT } from './setupSchema_Rockhopper'
 import { getRockhopperRuntimeAddress, ROCKHOPPER_RUNTIME_REGISTER_COUNT, ROCKHOPPER_RUNTIME_MAX_COUNT } from './runtimeSchema_Rockhopper'
@@ -45,6 +46,7 @@ export const REGISTER_CATALOG = {
 	},
 	peripherals: {
 		holding: { getAddress: getPeripheralSetupAddress, registerCount: PERIPHERAL_SETUP_REGISTER_COUNT, countField: 'numberOfPeripherals', maxCount: PERIPHERAL_SETUP_MAX_COUNT },
+		input: { getAddress: getPeripheralRuntimeAddress, registerCount: PERIPHERAL_RUNTIME_REGISTER_COUNT, countField: 'numberOfPeripherals', maxCount: PERIPHERAL_RUNTIME_MAX_COUNT },
 	},
 	extSignals: {
 		holding: { getAddress: getExternalSignalSetupAddress, registerCount: EXTERNAL_SIGNAL_SETUP_REGISTER_COUNT, countField: 'nubmberOfExtSignals', maxCount: EXTERNAL_SIGNAL_SETUP_MAX_COUNT },
