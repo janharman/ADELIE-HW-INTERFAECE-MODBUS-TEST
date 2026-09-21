@@ -8,6 +8,7 @@ const SerialManager = forwardRef((props, ref) => {
 	const keepReading = useRef(false); 
 	const incomingBuffer = useRef([]);
 	const responseWaiterRef = useRef(null);
+	const requestQueueRef = useRef(Promise.resolve());
 	
 	const STORAGE_KEY = 'last_used_serial_port_index';
 
@@ -156,12 +157,11 @@ const SerialManager = forwardRef((props, ref) => {
 		} catch (err) {}
 	};
 
-	useImperativeHandle(ref, () => ({
-		async sendAndReceive(dataArray, timeoutMs = 500) {
+	const sendAndReceiveNow = async (dataArray, timeoutMs = 500, expectedLengthOverride = null) => {
 			if (!portRef.current?.writable) throw new Error("Port not connected");
 			incomingBuffer.current = [];
 			const registerCount = (dataArray[4] << 8) | dataArray[5];
-			const expectedLength = (registerCount * 2) + 5;
+			const expectedLength = expectedLengthOverride ?? (registerCount * 2) + 5;
 			const writer = portRef.current.writable.getWriter();
 			const response = new Promise((resolve, reject) => {
 				const timeoutId = setTimeout(() => {
@@ -181,6 +181,16 @@ const SerialManager = forwardRef((props, ref) => {
 			}
 
 			return response;
+	}
+
+	useImperativeHandle(ref, () => ({
+		sendAndReceive(dataArray, timeoutMs = 500, expectedLengthOverride = null) {
+			// Queue all Modbus frames so UI commands cannot overlap polling requests.
+			requestQueueRef.current = requestQueueRef.current
+				.catch(() => {})
+				.then(() => sendAndReceiveNow(dataArray, timeoutMs, expectedLengthOverride));
+
+			return requestQueueRef.current;
 		},
 		disconnect
 	}));

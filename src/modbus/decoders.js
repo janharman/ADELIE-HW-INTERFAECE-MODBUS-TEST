@@ -89,6 +89,7 @@ import {
 	EXTERNAL_SIGNAL_RUNTIME_LETTER_COUNT,
 	createEmptyExternalSignalRuntime,
 } from './runtimeSchema_ExternalSignal'
+import { createEmptyGlobalRuntime } from './runtimeSchema_Global'
 import {
 	ROCKHOPPER_SETUP_FIELDS,
 	ROCKHOPPER_SETUP_STRING_FIELDS,
@@ -131,6 +132,7 @@ export const peripheralSetups = []
 export const peripheralRuntimeData = []
 export const externalSignalSetups = []
 export const externalSignalRuntime = createEmptyExternalSignalRuntime()
+export const globalRuntime = createEmptyGlobalRuntime()
 export const rockhopperSetups = []
 export const rockhopperRuntimeData = []
 export const globalCtrlDeviceSetups = []
@@ -700,6 +702,42 @@ const decodeExternalSignalRuntime = (response, frame) => {
 	return { externalSignalRuntime }
 }
 
+const formatGlobalStatusBits = (value) => Array.from(
+	{ length: 26 },
+	(_, bit) => ((value & (1 << bit)) ? String.fromCharCode(65 + bit) : '-'),
+).join('')
+
+const decodeGlobalRuntime = (response, frame) => {
+	if (!isValidReadResponse(response, frame)) return null
+	const globalError = (getRegister(response, 10) * 0x10000) + getRegister(response, 11)
+	const globalWarning = (getRegister(response, 12) * 0x10000) + getRegister(response, 13)
+	const globalStatus = (getRegister(response, 14) * 0x10000) + getRegister(response, 15)
+	const globalStatusBits = formatGlobalStatusBits(globalStatus)
+
+	const globalRuntimeData = {
+		...createEmptyGlobalRuntime(),
+		recordVersion: getRegister(response, 0),
+		jsonSetupVersion: getRegister(response, 1),
+		adeKerVersionNumber: getRegister(response, 2),
+		adeKerVersionDate: (getRegister(response, 3) * 0x10000) + getRegister(response, 4),
+		globalError,
+		globalWarning,
+		globalStatus,
+		globalErrorBits: formatGlobalStatusBits(globalError),
+		globalWarningBits: formatGlobalStatusBits(globalWarning),
+		globalStatusBits,
+		semaphore: {
+			red: globalStatusBits.includes('R'),
+			orange: globalStatusBits.includes('O'),
+			green: globalStatusBits.includes('G'),
+			buzzer: globalStatusBits.includes('B'),
+		},
+	}
+
+	Object.assign(globalRuntime, globalRuntimeData)
+	return { globalRuntime: globalRuntimeData }
+}
+
 const decodeRockhopperSetup = (response, frame) => {
 	if (!isValidReadResponse(response, frame)) return null
 
@@ -805,6 +843,7 @@ const DECODERS = {
 	peripheralRuntime: decodePeripheralRuntime,
 	externalSignalSetup: decodeExternalSignalSetup,
 	externalSignalRuntime: decodeExternalSignalRuntime,
+	globalRuntime: decodeGlobalRuntime,
 	rockhopperSetup: decodeRockhopperSetup,
 	rockhopperRuntime: decodeRockhopperRuntime,
 	globalCtrlDeviceSetup: decodeGlobalCtrlDeviceSetup,
@@ -835,6 +874,7 @@ export const resetSetupData = () => {
 	peripheralRuntimeData.length = 0
 	externalSignalSetups.length = 0
 	Object.assign(externalSignalRuntime, createEmptyExternalSignalRuntime())
+	Object.assign(globalRuntime, createEmptyGlobalRuntime())
 	rockhopperSetups.length = 0
 	rockhopperRuntimeData.length = 0
 	globalCtrlDeviceSetups.length = 0

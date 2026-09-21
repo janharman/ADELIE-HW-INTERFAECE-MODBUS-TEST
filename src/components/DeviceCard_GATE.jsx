@@ -1,18 +1,22 @@
 import './DeviceCard_GATE.css'
 
-// Priority order used to pick the single most relevant status chip for a gate.
+// Priority order used to pick the displayed movement or position status for a gate.
 const GATE_STATUS_PRIORITY = [
-	{ bit: 'error', label: 'Error', tone: 'error' },
-	{ bit: 'opening', label: 'Opening', tone: 'busy' },
-	{ bit: 'closing', label: 'Closing', tone: 'busy' },
-	{ bit: 'open', label: 'Open', tone: 'ok' },
-	{ bit: 'closed', label: 'Closed', tone: 'idle' },
-	{ bit: 'manualMode', label: 'Manual', tone: 'warning' },
+	{ bit: 'opening', label: 'OPENING', tone: 'busy' },
+	{ bit: 'closing', label: 'CLOSING', tone: 'busy' },
+	{ bit: 'open', label: 'OPEN', tone: 'ok' },
+	{ bit: 'closed', label: 'CLOSE', tone: 'closed' },
 ]
 
 const getGateStatus = (statusBits) => {
 	if (!statusBits) return null
-	return GATE_STATUS_PRIORITY.find(({ bit }) => statusBits[bit] === 1) ?? null
+
+	const status = GATE_STATUS_PRIORITY.find(({ bit }) => statusBits[bit] === 1) ?? null
+	return {
+		label: status?.label ?? 'UNKNOWN',
+		tone: status?.tone ?? 'unknown',
+		hasError: statusBits.error === 1,
+	}
 }
 
 const getCommunicationQualityClass = (communicationStatus) => {
@@ -21,16 +25,28 @@ const getCommunicationQualityClass = (communicationStatus) => {
 	return 'communication-quality-medium'
 }
 
-function DeviceCard_GATE({ deviceCount, devices, runtimeData = [] }) {
+function DeviceCard_GATE({ deviceCount, devices, runtimeData = [], onSimulateSignal, onClearAllSignals }) {
 	return (
 		<div className="gate-table-wrapper">
+			<div className="gate-toolbar">
+				<button
+					className="gate-toolbar-button"
+					type="button"
+					disabled={!deviceCount || !onClearAllSignals}
+					onClick={() => onClearAllSignals?.(deviceCount)}
+				>
+					Clear All Signals
+				</button>
+			</div>
 			<table className="gate-table">
 				<colgroup>
 					<col className="gate-col-id" />
 					<col className="gate-col-mid" />
+					<col className="gate-col-sim" />
 					<col className="gate-col-signal" />
 					<col className="gate-col-standard" />
 					<col className="gate-col-standard" />
+					<col className="gate-col-error" />
 					<col className="gate-col-name" />
 					<col className="gate-col-standard" />
 					<col className="gate-col-standard" />
@@ -49,9 +65,11 @@ function DeviceCard_GATE({ deviceCount, devices, runtimeData = [] }) {
 					<tr>
 						<th scope="col">ID</th>
 						<th scope="col">MID</th>
+						<th scope="col">Sim</th>
 						<th scope="col">Sig</th>
 						<th scope="col">Op.Req.</th>
 						<th scope="col">Status</th>
+						<th scope="col">E</th>
 						<th scope="col">Name</th>
 						<th scope="col">PRESSURE</th>
 						<th scope="col">Volume</th>
@@ -71,6 +89,7 @@ function DeviceCard_GATE({ deviceCount, devices, runtimeData = [] }) {
 						const device = devices[index]
 						const runtime = runtimeData[index]
 						const status = getGateStatus(runtime?.gateStatusBits)
+							const simulatedSignal = runtime?.gateStatusBits?.simulatedSignal === 1
 						const hasPressureDisplay = Number(device?.version ?? 0) >= 5
 						const showPressure = !!runtime && hasPressureDisplay
 
@@ -78,6 +97,17 @@ function DeviceCard_GATE({ deviceCount, devices, runtimeData = [] }) {
 							<tr className="gate-table-row" key={index}>
 								<td className="gate-id-cell">{device?.gateId ?? '---'}</td>
 								<td className="gate-mid-cell">{device?.motorId ?? '---'}</td>
+								<td className="gate-sim-cell">
+									<button
+										className={`gate-sim-button ${simulatedSignal ? 'active' : ''}`}
+										type="button"
+										title="Simulate signal"
+										disabled={!onSimulateSignal}
+										onClick={() => onSimulateSignal?.(index, !simulatedSignal)}
+									>
+										S
+									</button>
+								</td>
 								<td className="gate-signal-cell">
 									{runtime?.gateStatusBits?.manualMode ? (
 										<span className="gate-signal-manual" title="Manual">M</span>
@@ -98,11 +128,14 @@ function DeviceCard_GATE({ deviceCount, devices, runtimeData = [] }) {
 								<td className="gate-secondary-cell">
 									{runtime ? (
 										<span className={`gate-status-chip ${status?.tone ?? 'unknown'}`}>
-											{status?.label ?? 'Unknown'}
+											{status?.label ?? 'UNKNOWN'}
 										</span>
 									) : (
 										<span className="gate-runtime-placeholder">---</span>
 									)}
+								</td>
+								<td className="gate-error-cell">
+									{status?.hasError ? <span className="gate-error-badge">E</span> : null}
 								</td>
 								<td className="gate-table-name">
 									{device?.gateName?.trim() || `Gate ${index + 1}`}

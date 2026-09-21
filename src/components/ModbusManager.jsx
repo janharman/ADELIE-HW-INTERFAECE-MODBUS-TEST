@@ -27,6 +27,7 @@ import { buildPeripheralSetupReads } from '../modbus/setupSchema_Peripheral'
 import { buildExternalSignalSetupReads } from '../modbus/setupSchema_ExternalSignal'
 import { buildRockhopperSetupReads } from '../modbus/setupSchema_Rockhopper'
 import { buildGlobalCtrlDeviceSetupReads } from '../modbus/setupSchema_GlobalCtrlDevice'
+import { buildGlobalRuntimeReads } from '../modbus/runtimeSchema_Global'
 
 // The setup phase reads the static frames plus one Setup frame per known system.
 const getSetupReads = () => [
@@ -76,6 +77,8 @@ function ModbusManager({
 		let cancelled = false
 		let phase = 'setup'
 		let readIndex = 0
+		let runtimeCategoryReadCount = 0
+		let lastRuntimeCategory = activeCategoryRef.current
 		let appliedSetupReloadToken = setupReloadTokenRef.current
 
 		// Sends one frame and reports its outcome; throws so the caller can restart the cycle.
@@ -119,6 +122,8 @@ function ModbusManager({
 			readIndex = 0
 			resetSetupData()
 			resetRegisterStore()
+			runtimeCategoryReadCount = 0
+		lastRuntimeCategory = activeCategoryRef.current
 			onSetupProgressRef.current?.(0, HOLDING_REGISTER_READS.length)
 		}
 
@@ -143,23 +148,47 @@ function ModbusManager({
 			if (readIndex >= setupReads.length) {
 				phase = 'running'
 				readIndex = 0
+				runtimeCategoryReadCount = 10
 			}
 		}
 
-		// Phase 2: cycle only through the input registers needed by the active UI category.
+		// Phase 2: poll global runtime while idle, and every tenth category read while active.
 		const runRunningStep = async () => {
-			const reads = getInputRegisterReads(activeCategoryRef.current, greenBOX_Setup)
-			if (reads.length === 0) return
+			const activeRuntimeCategory = activeCategoryRef.current
+			if (activeRuntimeCategory !== lastRuntimeCategory) {
+				lastRuntimeCategory = activeRuntimeCategory
+				runtimeCategoryReadCount = 0
+				readIndex = 0
+			}
 
-			if (readIndex >= reads.length) readIndex = 0
+			const categoryReads = getInputRegisterReads(activeRuntimeCategory, greenBOX_Setup)
+			if (categoryReads.length === 0) {
+				await sendRead({
+					...buildGlobalRuntimeReads()[0],
+					functionCode: READ_INPUT_REGISTERS,
+				})
+				return
+			}
+
+			if (runtimeCategoryReadCount >= 10) {
+				await sendRead({
+					...buildGlobalRuntimeReads()[0],
+					functionCode: READ_INPUT_REGISTERS,
+				})
+				runtimeCategoryReadCount = 0
+				return
+			}
+
+			if (readIndex >= categoryReads.length) readIndex = 0
 
 			const read = {
-				...reads[readIndex],
+				...categoryReads[readIndex],
 				functionCode: READ_INPUT_REGISTERS,
 			}
 
 			await sendRead(read)
 			readIndex += 1
+			runtimeCategoryReadCount += 1
 		}
 
 		const tick = async () => {

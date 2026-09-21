@@ -11,9 +11,20 @@ import DeviceCard_INTERFACE from './components/DeviceCard_INTERFACE'
 import DeviceCard_MODBUS_DEVICE from './components/DeviceCard_MODBUS_DEVICE'
 import DeviceCard_ROCKHOPPER from './components/DeviceCard_ROCKHOPPER'
 import RegisterTablePanel from './components/RegisterTablePanel'
+import GlobalRuntimePanel from './components/GlobalRuntimePanel'
 import { resetSetupData } from './modbus/decoders'
 import { resetRegisterStore } from './modbus/registerStore'
 import { REGISTER_CATALOG } from './modbus/registerCatalog'
+import {
+	WRITE_SINGLE_COIL_OFF,
+	WRITE_SINGLE_COIL_ON,
+	WRITE_SINGLE_COIL_RESPONSE_LENGTH,
+	WRITE_MULTIPLE_COILS_RESPONSE_LENGTH,
+	createWriteMultipleCoilsFrame,
+	createWriteSingleCoilFrame,
+	isValidWriteMultipleCoilsResponse,
+	isValidWriteSingleCoilResponse,
+} from './modbus/modbusProtocol'
 import {
 	DEFAULT_MODBUS_SLAVE_ADDRESS,
 	HOLDING_REGISTER_READS,
@@ -37,6 +48,12 @@ const readStoredSlaveAddress = () => {
 		: DEFAULT_MODBUS_SLAVE_ADDRESS
 }
 
+const formatVersionSuffix = (value) => {
+	const unsignedValue = value >>> 0
+	const hexadecimalValue = unsignedValue.toString(16).padStart(8, '0').toUpperCase()
+	return `${hexadecimalValue.slice(0, 6)}.${String.fromCharCode(unsignedValue & 0xff)}`
+}
+
 // Device categories shown as cards; Systems and Gates have setup tables.
 const CATEGORY_DEFINITIONS = [
 	{ id: 'systems', label: 'Systems', icon: 'systems', countField: 'numberOfSystems', enabled: true },
@@ -54,6 +71,8 @@ const CATEGORY_DEFINITIONS = [
 const SYSTEM_SETUP_BIT_FIELDS = new Set(
 	SYSTEM_SETUP_FIELDS.filter((field) => field.type === 'highBit').map((field) => field.name),
 )
+
+const GATE_SIGNAL_COIL_BASE_ADDRESS = 10000
 
 const getWorkstationGateIds = (gates = []) => {
 	const terminatorIndex = gates.indexOf(0)
@@ -132,6 +151,7 @@ function App() {
 	const [peripheralRuntimeData, setPeripheralRuntimeData] = useState([])
 	const [externalSignalSetups, setExternalSignalSetups] = useState([])
 	const [externalSignalRuntime, setExternalSignalRuntime] = useState(null)
+	const [globalRuntime, setGlobalRuntime] = useState(null)
 	const [rockhopperSetups, setRockhopperSetups] = useState([])
 	const [rockhopperRuntimeData, setRockhopperRuntimeData] = useState([])
 	const [globalCtrlDeviceSetups, setGlobalCtrlDeviceSetups] = useState([])
@@ -177,6 +197,7 @@ function App() {
 		setPeripheralRuntimeData([])
 		setExternalSignalSetups([])
 		setExternalSignalRuntime(null)
+		setGlobalRuntime(null)
 		setRockhopperSetups([])
 		setRockhopperRuntimeData([])
 		setGlobalCtrlDeviceSetups([])
@@ -218,6 +239,59 @@ function App() {
 	const handleSetupReload = () => {
 		resetSetupState()
 		setSetupReloadToken((current) => current + 1)
+	}
+
+	const handleGateSignalSimulation = async (gateIndex, enabled) => {
+		const coilAddress = GATE_SIGNAL_COIL_BASE_ADDRESS + gateIndex
+		const coilValue = enabled ? WRITE_SINGLE_COIL_ON : WRITE_SINGLE_COIL_OFF
+		const frame = createWriteSingleCoilFrame(slaveAddress, coilAddress, coilValue)
+		const commandName = `Gate ${gateIndex + 1} Signal ${enabled ? 'ON' : 'OFF'}`
+
+		try {
+			const response = await serialRef.current.sendAndReceive(frame, 500, WRITE_SINGLE_COIL_RESPONSE_LENGTH)
+			const successful = isValidWriteSingleCoilResponse(
+				response,
+				slaveAddress,
+				coilAddress,
+				coilValue,
+			)
+			const errorMessage = successful ? '' : 'Invalid Write Single Coil response'
+
+			handleCommunicationStatus(commandName, successful, response.length, errorMessage)
+			if (!successful) console.warn('Gate signal simulation failed:', errorMessage)
+		} catch (error) {
+			handleCommunicationStatus(commandName, false, 0, error.message)
+			console.warn('Gate signal simulation failed:', error)
+		}
+	}
+
+	// Clears every simulated gate signal with one Write Multiple Coils command.
+	const handleClearAllGateSignals = async (gateCount) => {
+		if (!gateCount) return
+
+		const frame = createWriteMultipleCoilsFrame(
+			slaveAddress,
+			GATE_SIGNAL_COIL_BASE_ADDRESS,
+			Array(gateCount).fill(false),
+		)
+		const commandName = 'Clear All Gate Signals'
+
+		try {
+			const response = await serialRef.current.sendAndReceive(frame, 500, WRITE_MULTIPLE_COILS_RESPONSE_LENGTH)
+			const successful = isValidWriteMultipleCoilsResponse(
+				response,
+				slaveAddress,
+				GATE_SIGNAL_COIL_BASE_ADDRESS,
+				gateCount,
+			)
+			const errorMessage = successful ? '' : 'Invalid Write Multiple Coils response'
+
+			handleCommunicationStatus(commandName, successful, response.length, errorMessage)
+			if (!successful) console.warn('Clearing gate signals failed:', errorMessage)
+		} catch (error) {
+			handleCommunicationStatus(commandName, false, 0, error.message)
+			console.warn('Clearing gate signals failed:', error)
+		}
 	}
 
 	const handleModbusResponse = (response, read, decodedData) => {
@@ -309,6 +383,8 @@ function App() {
 			})
 		} else if (read.decoder === 'externalSignalRuntime') {
 			setExternalSignalRuntime(decodedData.externalSignalRuntime)
+		} else if (read.decoder === 'globalRuntime') {
+			setGlobalRuntime(decodedData.globalRuntime)
 		} else if (read.decoder === 'rockhopperSetup') {
 			setRockhopperSetups((current) => {
 				const next = [...current]
@@ -412,7 +488,6 @@ function App() {
 								</button>
 							</div>
 							<div className="communication-status-window">
-								<div className="communication-status-title">Communication status</div>
 								{communicationStatus.length > 0 ? (
 									communicationStatus.map((entry, index) => (
 										<div className="communication-status-row" key={`${entry.name}-${index}`}>
@@ -433,15 +508,15 @@ function App() {
 								<span className="control-label">AdeCom</span>
 								<span className="version-value">
 									{greenBoxSetup
-										? `v${greenBoxSetup.adeComVersion} · ${greenBoxSetup.adeComVersionDate.toString(16).toUpperCase()}`
+										? `${greenBoxSetup.adeComVersion}-${formatVersionSuffix(greenBoxSetup.adeComVersionDate)}`
 										: '---'}
 								</span>
 							</div>
 							<div className="version-row">
 								<span className="control-label">AdeKer</span>
 								<span className="version-value">
-									{greenBoxSetup
-										? `v${greenBoxSetup.adeKerVersion} · ${greenBoxSetup.adeKerVersionDate.toString(16).toUpperCase()}`
+									{globalRuntime
+										? `${globalRuntime.adeKerVersionNumber}-${formatVersionSuffix(globalRuntime.adeKerVersionDate)}`
 										: '---'}
 								</span>
 							</div>
@@ -470,7 +545,9 @@ function App() {
 						<div className="gb-header-info">
 							<div className="gb-serial-number">
 								<span className="gb-serial-label">Serial number</span>
-								<strong>{greenBoxSetup?.gbSerialNumber ?? '---'}</strong>
+								<strong>
+									{greenBoxSetup ? greenBoxSetup.gbSerialNumber + 2000000 : '---'}
+								</strong>
 							</div>
 							<div className="gb-identity">
 								<h2 className="gb-name">{greenBoxSetup?.gbName?.trim() || 'greenBOX'}</h2>
@@ -479,6 +556,7 @@ function App() {
 								) : null}
 							</div>
 						</div>
+						<GlobalRuntimePanel runtime={globalRuntime} />
 						{!setupComplete && (
 							<div className="setup-progress">
 								<div className="setup-progress-track">
@@ -535,9 +613,11 @@ function App() {
 
 						{activeCategory === 'gates' && (
 							<DeviceCard_GATE
-												deviceCount={gateSetups.length || greenBoxSetup?.numberOfGates}
+								deviceCount={gateSetups.length || greenBoxSetup?.numberOfGates}
 								devices={gateSetups}
 								runtimeData={gateRuntimeData}
+								onSimulateSignal={handleGateSignalSimulation}
+								onClearAllSignals={handleClearAllGateSignals}
 							/>
 						)}
 

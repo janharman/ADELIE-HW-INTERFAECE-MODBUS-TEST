@@ -8,6 +8,7 @@ export const GATE_STATUS_BITS = {
 	error: 2,
 	opening: 3,
 	closing: 4,
+	simulatedSignal: 6,
 	manualMode: 7,
 }
 

@@ -3,6 +3,39 @@
 	overflow-x: auto;
 }
 
+.gate-toolbar {
+	display: flex;
+	align-items: center;
+	min-height: 38px;
+	padding: 0.35rem 0.5rem;
+	border-bottom: 1px solid #333;
+	background-color: #111;
+}
+
+.gate-toolbar-button {
+	padding: 0.35rem 0.7rem;
+	border: 1px solid #7a2525;
+	border-radius: 3px;
+	background-color: #321818;
+	color: #ff8b8b;
+	cursor: pointer;
+	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+	font-size: 12px;
+	font-weight: 600;
+}
+
+.gate-toolbar-button:hover:not(:disabled) {
+	border-color: #c55a5a;
+	background-color: #472020;
+}
+
+.gate-toolbar-button:disabled {
+	border-color: #3a3a3a;
+	background-color: #202020;
+	color: #666;
+	cursor: not-allowed;
+}
+
 .gate-table {
 	width: 100%;
 	border-collapse: collapse;
@@ -52,9 +85,51 @@
 	text-align: right !important;
 }
 
+.gate-col-sim {
+	width: 2.2rem;
+}
+
+.gate-sim-cell {
+	text-align: center !important;
+}
+
+.gate-sim-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 22px;
+	height: 18px;
+	padding: 0;
+	border: 1px solid #3d6f68;
+	border-radius: 3px;
+	background-color: #162421;
+	color: #7ad6c7;
+	cursor: pointer;
+	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+	font-size: 11px;
+	font-weight: 500;
+	line-height: 1.6;
+}
+
+.gate-sim-button:hover {
+	border-color: #7ad6c7;
+	background-color: #1d332f;
+}
+
+.gate-sim-button.active {
+	border-color: #f0b429;
+	background-color: #4a3a13;
+	color: #ffd166;
+	box-shadow: 0 0 8px rgba(240, 180, 41, 0.55);
+}
+
 .gate-signal-cell {
 	width: 2.2rem;
 	text-align: center !important;
+}
+
+.gate-col-error {
+	width: 2rem;
 }
 
 .gate-signal-indicator {
@@ -133,6 +208,9 @@
 }
 
 .gate-status-chip {
+	display: flex;
+	align-items: center;
+	justify-content: center;
 	padding: 0.1rem 0rem;
 	border-radius: 999px;
 	background-color: #2a2a2a;
@@ -142,9 +220,27 @@
 	font-weight: 700;
 	letter-spacing: 0.1em;
 	text-transform: uppercase;
-	display: block; 
 	width: 100%; 
 	text-align: center;
+}
+
+.gate-error-cell {
+	text-align: center !important;
+}
+
+.gate-error-badge {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 16px;
+	height: 16px;
+	border-radius: 50%;
+	background-color: #5b1616;
+	color: #ff7777;
+	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+	font-size: 11px;
+	font-weight: 800;
+	line-height: 1;
 }
 
 .gate-pressure-cell {
@@ -184,6 +280,11 @@
 .gate-status-chip.idle {
 	background-color: #2a2a2a;
 	color: #aaa;
+}
+
+.gate-status-chip.closed {
+	background-color: #2d1111;
+	color: #c55a5a;
 }
 
 .gate-status-chip.warning {
