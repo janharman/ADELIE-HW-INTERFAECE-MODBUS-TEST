@@ -476,68 +476,6 @@ body {
 	overflow-y: auto;
 }
 
-.workstation-table-wrapper {
-	width: 100%;
-	overflow-x: auto;
-}
-
-.workstation-table {
-	width: 100%;
-	border-collapse: collapse;
-	table-layout: auto;
-	background-color: #181818;
-}
-
-.workstation-table th,
-.workstation-table td {
-	padding: 0.25rem 0.3rem;
-	border-bottom: 1px solid #333;
-	text-align: left;
-}
-
-.workstation-table th {
-	position: sticky;
-	top: 0;
-	background-color: #111;
-	color: #7ad6c7;
-	font-size: 11px;
-	letter-spacing: 0.05em;
-	text-transform: uppercase;
-}
-
-.workstation-table-row td {
-	color: #ddd;
-	font-family: 'Courier New', monospace;
-	font-size: 13px;
-}
-
-.workstation-id-cell {
-	color: #7ad6c7 !important;
-	font-size: 16px !important;
-	font-weight: 700;
-}
-
-.workstation-name-cell {
-	overflow: hidden;
-	color: #fff !important;
-	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
-	font-size: 15px !important;
-	font-weight: 700;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-
-.workstation-mode-cell {
-	color: #d2df79 !important;
-	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
-	font-size: 12px !important;
-	font-weight: 600;
-}
-
-.workstation-ext-cell {
-	text-align: left !important;
-}
-
 .system-setup-item-value {
 	display: inline-block;
 	padding: 0.0625rem 0.375rem;
@@ -561,37 +499,6 @@ body {
 
 .system-setup-bit-value.off {
 	color: #ff4444;
-}
-
-.workstation-ext-cell .system-setup-bit-value.off {
-	color: #fff;
-}
-
-.workstation-gates-cell {
-	color: #aaa !important;
-	font-size: 11px !important;
-	overflow: hidden;
-}
-
-.workstation-gate-chips {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0.2rem;
-}
-
-.workstation-gate-chip {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	min-width: 1.5rem;
-	padding: 0.1rem 0.25rem;
-	border: 1px solid #7ad6c7;
-	border-radius: 0.2rem;
-	background-color: rgba(122, 214, 199, 0.12);
-	color: #d2df79;
-	font-family: 'Courier New', monospace;
-	font-size: 11px;
-	font-weight: 700;
 }
 
 .peripheral-table-wrapper {

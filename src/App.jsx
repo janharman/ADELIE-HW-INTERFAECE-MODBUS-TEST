@@ -10,6 +10,7 @@ import DeviceCard_SYSTEM from './components/DeviceCard_SYSTEM'
 import DeviceCard_INTERFACE from './components/DeviceCard_INTERFACE'
 import DeviceCard_MODBUS_DEVICE from './components/DeviceCard_MODBUS_DEVICE'
 import DeviceCard_ROCKHOPPER from './components/DeviceCard_ROCKHOPPER'
+import DeviceCard_WORKSTATION from './components/DeviceCard_WORKSTATION'
 import RegisterTablePanel from './components/RegisterTablePanel'
 import GlobalRuntimePanel from './components/GlobalRuntimePanel'
 import { resetSetupData } from './modbus/decoders'
@@ -74,17 +75,6 @@ const SYSTEM_SETUP_BIT_FIELDS = new Set(
 
 const GATE_SIGNAL_COIL_BASE_ADDRESS = 10000
 
-const getWorkstationGateIds = (gates = []) => {
-	const terminatorIndex = gates.indexOf(0)
-	return terminatorIndex === -1 ? gates : gates.slice(0, terminatorIndex)
-}
-
-const WORKSTATION_MODE_LABELS = {
-	0: 'No Gates affected',
-	1: 'Ext.Sign Affect Gates',
-	2: 'All Gates',
-}
-
 const getVsdStatusClassName = (runtimeData) => {
 	if (!runtimeData) return 'unknown'
 	if (runtimeData.statusBits?.error || runtimeData.statusBits?.immediateStop) return 'error'
@@ -143,6 +133,7 @@ function App() {
 	const [vsdSetups, setVsdSetups] = useState([])
 	const [vsdRuntimeData, setVsdRuntimeData] = useState([])
 	const [workstationSetups, setWorkstationSetups] = useState([])
+	const [workstationRuntimeData, setWorkstationRuntimeData] = useState([])
 	const [modbusDeviceSetups, setModbusDeviceSetups] = useState([])
 	const [modbusDeviceRuntimeData, setModbusDeviceRuntimeData] = useState([])
 	const [interfaceSetups, setInterfaceSetups] = useState([])
@@ -189,6 +180,7 @@ function App() {
 		setVsdSetups([])
 		setVsdRuntimeData([])
 		setWorkstationSetups([])
+		setWorkstationRuntimeData([])
 		setModbusDeviceSetups([])
 		setModbusDeviceRuntimeData([])
 		setInterfaceSetups([])
@@ -339,6 +331,8 @@ function App() {
 				next[decodedData.workstationIndex] = decodedData.workstationSetup
 				return next
 			})
+		} else if (read.decoder === 'workstationRuntime') {
+			setWorkstationRuntimeData([...decodedData.workstationRuntimeData])
 		} else if (read.decoder === 'modbusDeviceSetup') {
 			setModbusDeviceSetups((current) => {
 				const next = [...current]
@@ -639,54 +633,11 @@ function App() {
 						)}
 
 						{activeCategory === 'workstations' && (
-							<div className="workstation-table-wrapper">
-								<table className="workstation-table">
-									<thead>
-										<tr>
-											<th scope="col">ID</th>
-											<th scope="col">Name</th>
-											<th scope="col">Mode</th>
-											<th scope="col">Ext</th>
-											<th scope="col">Gates[32]</th>
-										</tr>
-									</thead>
-									<tbody>
-										{Array.from({ length: greenBoxSetup?.nubmerOfWorkstations || 0 }).map((_, index) => (
-											<tr className="workstation-table-row" key={index}>
-												<td className="workstation-id-cell">{workstationSetups[index]?.workstationId ?? '---'}</td>
-												<td className="workstation-name-cell">
-													{workstationSetups[index]?.name?.trim() || `Workstation ${index + 1}`}
-												</td>
-												<td className="workstation-mode-cell">
-													{WORKSTATION_MODE_LABELS[workstationSetups[index]?.mode] ?? workstationSetups[index]?.mode ?? '---'}
-												</td>
-														<td className="workstation-ext-cell">
-																<span
-																	className={`system-setup-item-value system-setup-bit-value ${workstationSetups[index]?.ext ? 'on' : 'off'}`}
-																	title={workstationSetups[index]?.ext ? 'ON' : 'OFF'}
-																>
-																	{workstationSetups[index]?.ext ? '✓' : '✕'}
-																</span>
-														</td>
-												<td className="workstation-gates-cell">
-														{getWorkstationGateIds(workstationSetups[index]?.gates).length > 0 ? (
-															<div className="workstation-gate-chips">
-																{getWorkstationGateIds(workstationSetups[index]?.gates).map((gateId, gateIndex) => (
-																	<span className="workstation-gate-chip" key={`${gateId}-${gateIndex}`}>
-																		{gateId}
-																	</span>
-																))}
-															</div>
-														) : '---'}
-												</td>
-											</tr>
-										))}
-									</tbody>
-								</table>
-								{!greenBoxSetup?.nubmerOfWorkstations && (
-									<p className="content-placeholder">No workstations reported yet.</p>
-								)}
-							</div>
+							<DeviceCard_WORKSTATION
+								deviceCount={greenBoxSetup?.nubmerOfWorkstations}
+								workstations={workstationSetups}
+								runtimeData={workstationRuntimeData}
+							/>
 						)}
 
 						{activeCategory === 'modbusDevices' && (
@@ -851,10 +802,12 @@ function App() {
 									const catalogEntry = REGISTER_CATALOG[activeCategory]?.[registerPanelMode]
 									if (!catalogEntry) return <p className="content-placeholder">No data yet.</p>
 
-									const deviceCount = Math.min(
-										greenBoxSetup?.[catalogEntry.countField] || 0,
-										catalogEntry.maxCount ?? Infinity,
-									)
+									const deviceCount = catalogEntry.sharedBlock
+										? 1
+										: Math.min(
+											greenBoxSetup?.[catalogEntry.countField] || 0,
+											catalogEntry.maxCount ?? Infinity,
+										)
 
 									return (
 										<RegisterTablePanel

@@ -6,6 +6,7 @@ import { buildRockhopperRuntimeReads } from './runtimeSchema_Rockhopper'
 import { buildSystemRuntimeReads } from './runtimeSchema_System'
 import { buildPeripheralRuntimeReads } from './runtimeSchema_Peripheral'
 import { buildExternalSignalRuntimeReads } from './runtimeSchema_ExternalSignal'
+import { buildWorkstationRuntimeReads } from './runtimeSchema_Workstation'
 
 export const DEFAULT_MODBUS_SLAVE_ADDRESS = 1
 export const MODBUS_SLAVE_ADDRESS_STORAGE_KEY = 'modbus_slave_address'
@@ -23,6 +24,7 @@ export const HOLDING_REGISTER_READS = [
 const CATEGORY_RUNTIME_READS = {
 	systems: (setup) => buildSystemRuntimeReads(setup?.numberOfSystems),
 	vfds: (setup) => buildVsdRuntimeReads(setup?.numberOfVfds),
+	workstations: (setup) => buildWorkstationRuntimeReads(setup?.nubmerOfWorkstations),
 	interfaces: (setup) => buildInterfaceRuntimeReads(setup?.numberOfInterfaces),
 	gates: (setup) => buildGateRuntimeReads(setup?.numberOfGates),
 	modbusDevices: (setup) => buildModbusDeviceRuntimeReads(setup?.numberOfModbusDevices),

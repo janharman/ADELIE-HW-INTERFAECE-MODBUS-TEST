@@ -8,6 +8,7 @@ import { getGateRuntimeAddress, GATE_RUNTIME_REGISTER_COUNT } from './runtimeSch
 import { getVsdSetupAddress, VSD_SETUP_REGISTER_COUNT } from './setupSchema_VSD'
 import { getVsdRuntimeAddress, VSD_RUNTIME_REGISTER_COUNT } from './runtimeSchema_VSD'
 import { getWorkstationSetupAddress, WORKSTATION_SETUP_REGISTER_COUNT } from './setupSchema_Workstation'
+import { WORKSTATION_RUNTIME_BASE_ADDRESS, WORKSTATION_RUNTIME_REGISTER_COUNT } from './runtimeSchema_Workstation'
 import { getModbusDeviceSetupAddress, MODBUS_DEVICE_SETUP_REGISTER_COUNT } from './setupSchema_ModbusDevice'
 import { getModbusDeviceRuntimeAddress, MODBUS_DEVICE_RUNTIME_REGISTER_COUNT } from './runtimeSchema_ModbusDevice'
 import { getInterfaceSetupAddress, INTERFACE_SETUP_REGISTER_COUNT, INTERFACE_SETUP_MAX_COUNT } from './setupSchema_Interface'
@@ -35,6 +36,12 @@ export const REGISTER_CATALOG = {
 	},
 	workstations: {
 		holding: { getAddress: getWorkstationSetupAddress, registerCount: WORKSTATION_SETUP_REGISTER_COUNT, countField: 'nubmerOfWorkstations' },
+		input: {
+			getAddress: () => WORKSTATION_RUNTIME_BASE_ADDRESS,
+			registerCount: WORKSTATION_RUNTIME_REGISTER_COUNT,
+			countField: 'nubmerOfWorkstations',
+			sharedBlock: true,
+		},
 	},
 	modbusDevices: {
 		holding: { getAddress: getModbusDeviceSetupAddress, registerCount: MODBUS_DEVICE_SETUP_REGISTER_COUNT, countField: 'numberOfModbusDevices' },

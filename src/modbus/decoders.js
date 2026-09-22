@@ -65,6 +65,11 @@ import {
 } from './setupSchema_ModbusDevice'
 import { createEmptyModbusDeviceRuntime } from './runtimeSchema_ModbusDevice'
 import {
+	WORKSTATION_RUNTIME_FLAG_REGISTER_COUNT,
+	WORKSTATION_RUNTIME_MAX_COUNT,
+	createEmptyWorkstationRuntime,
+} from './runtimeSchema_Workstation'
+import {
 	INTERFACE_BRANCH_FIELDS,
 	INTERFACE_SETUP_FIELDS,
 	INTERFACE_SETUP_FAILURE_PORT_BITS,
@@ -124,6 +129,7 @@ export const gateRuntimeData = []
 export const vsdSetups = []
 export const vsdRuntimeData = []
 export const workstationSetups = []
+export const workstationRuntimeData = []
 export const modbusDeviceSetups = []
 export const modbusDeviceRuntimeData = []
 export const interfaceSetups = []
@@ -494,6 +500,26 @@ const decodeWorkstationSetup = (response, frame) => {
 	}
 }
 
+const decodeWorkstationRuntime = (response, frame) => {
+	// Some greenBOX firmware exposes this shared runtime block through the same
+	// register space as setup, while still returning the complete 32-register payload.
+	if (response[2] !== frame.count * 2) return null
+
+	workstationRuntimeData.length = 0
+	const workstationCount = Math.min(frame.workstationCount ?? WORKSTATION_RUNTIME_MAX_COUNT, WORKSTATION_RUNTIME_MAX_COUNT)
+	for (let workstationIndex = 0; workstationIndex < workstationCount; workstationIndex += 1) {
+		const activeRegister = getRegister(response, Math.floor(workstationIndex / 16))
+		const forceRegister = getRegister(response, WORKSTATION_RUNTIME_FLAG_REGISTER_COUNT + Math.floor(workstationIndex / 16))
+		workstationRuntimeData[workstationIndex] = {
+			...createEmptyWorkstationRuntime(),
+			active: (activeRegister >> (workstationIndex % 16)) & 1,
+			force: (forceRegister >> (workstationIndex % 16)) & 1,
+		}
+	}
+
+	return { workstationRuntimeData: [...workstationRuntimeData] }
+}
+
 const decodeModbusDeviceSetup = (response, frame) => {
 	if (!isValidReadResponse(response, frame)) return null
 
@@ -835,6 +861,7 @@ const DECODERS = {
 	vsdSetup: decodeVsdSetup,
 	vsdRuntime: decodeVsdRuntime,
 	workstationSetup: decodeWorkstationSetup,
+	workstationRuntime: decodeWorkstationRuntime,
 	modbusDeviceSetup: decodeModbusDeviceSetup,
 	modbusDeviceRuntime: decodeModbusDeviceRuntime,
 	interfaceSetup: decodeInterfaceSetup,
@@ -866,6 +893,7 @@ export const resetSetupData = () => {
 	vsdSetups.length = 0
 	vsdRuntimeData.length = 0
 	workstationSetups.length = 0
+	workstationRuntimeData.length = 0
 	modbusDeviceSetups.length = 0
 	modbusDeviceRuntimeData.length = 0
 	interfaceSetups.length = 0

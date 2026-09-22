@@ -1,0 +1,145 @@
+.workstation-table-wrapper {
+	width: 100%;
+	overflow-x: auto;
+}
+
+.workstation-table {
+	width: 100%;
+	border-collapse: collapse;
+	table-layout: fixed;
+	background-color: #181818;
+}
+
+.workstation-table th:nth-child(1),
+.workstation-table td:nth-child(1) {
+	width: 4rem;
+}
+
+.workstation-table th:nth-child(2),
+.workstation-table th:nth-child(3),
+.workstation-table td:nth-child(2),
+.workstation-table td:nth-child(3) {
+	width: 4.75rem;
+	text-align: center;
+}
+
+.workstation-table th:nth-child(5),
+.workstation-table td:nth-child(5) {
+	width: 12rem;
+}
+
+.workstation-table th:nth-child(6),
+.workstation-table td:nth-child(6) {
+	width: 4rem;
+	text-align: center;
+}
+
+.workstation-table th,
+.workstation-table td {
+	padding: 0.25rem 0.3rem;
+	border-bottom: 1px solid #333;
+	text-align: left;
+}
+
+.workstation-table th {
+	position: sticky;
+	top: 0;
+	background-color: #111;
+	color: #7ad6c7;
+	font-size: 11px;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+}
+
+.workstation-table-row td {
+	vertical-align: top;
+	color: #ddd;
+	font-family: 'Courier New', monospace;
+	font-size: 13px;
+}
+
+.workstation-flag-cell {
+	color: #777 !important;
+	font-size: 12px !important;
+	text-align: center !important;
+}
+
+.workstation-led {
+	display: inline-block;
+	width: 0.65rem;
+	height: 0.65rem;
+	border: 1px solid #555;
+	border-radius: 50%;
+	background: #555;
+	box-shadow: inset 0 0 0 1px #222;
+}
+
+.workstation-led-active.on {
+	border-color: #39e27d;
+	background: #34c759;
+	box-shadow: 0 0 0.45rem rgba(52, 199, 89, 0.75);
+}
+
+.workstation-led-force.on {
+	border-color: #81bcf3;
+	background: #4da3ff;
+	box-shadow: 0 0 0.45rem rgba(77, 163, 255, 0.75);
+}
+
+.workstation-id-cell {
+	color: #7ad6c7 !important;
+	font-size: 16px !important;
+	font-weight: 700;
+}
+
+.workstation-name-cell {
+	overflow: hidden;
+	color: #fff !important;
+	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+	font-size: 15px !important;
+	font-weight: 700;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.workstation-mode-cell {
+	color: #d2df79 !important;
+	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+	font-size: 12px !important;
+	font-weight: 600;
+}
+
+.workstation-ext-cell {
+	text-align: left !important;
+}
+
+.workstation-ext-cell .system-setup-bit-value.off {
+	color: #fff;
+}
+
+.workstation-gates-cell {
+	overflow: hidden;
+	color: #aaa !important;
+	font-size: 11px !important;
+}
+
+.workstation-gate-chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.2rem;
+}
+
+.workstation-gate-chip {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 1.5rem;
+	padding: 0.1rem 0.25rem;
+	border: 1px solid #7ad6c7;
+	border-radius: 0.2rem;
+	background-color: rgba(122, 214, 199, 0.12);
+	color: #d2df79;
+	font-family: 'Courier New', monospace;
+	font-size: 11px;
+	font-weight: 700;
+}

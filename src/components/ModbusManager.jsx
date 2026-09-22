@@ -103,7 +103,8 @@ function ModbusManager({
 			onResponseRef.current?.(response, read, decodedData)
 
 			const successful = matchesSlaveAddress(response, slaveAddressRef.current)
-				&& isValidReadResponse(response, read)
+				&& (isValidReadResponse(response, read)
+					|| (read.allowFunctionCodeMismatch && response[2] === read.count * 2))
 			const errorMessage = successful
 				? ''
 				: `Expected ${read.count * 2 + 5} B, received ${response.length} B (slave ${response[0] ?? '---'}, function ${response[1] ?? '---'})`
