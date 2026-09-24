@@ -1,6 +1,6 @@
 export const GATE_SETUP_BASE_ADDRESS = 10000
 export const GATE_SETUP_ADDRESS_STRIDE = 50
-export const GATE_SETUP_REGISTER_COUNT = 41
+export const GATE_SETUP_REGISTER_COUNT = 42
 
 export const getGateSetupAddress = (gateIndex) => (
 	GATE_SETUP_BASE_ADDRESS + gateIndex * GATE_SETUP_ADDRESS_STRIDE
@@ -18,6 +18,7 @@ export const createEmptyGateSetup = () => ({
 	openMode: 0,
 	airVelocity: 0,
 	calibrationConstant: 0,
+	linkedSystems: 0,
 })
 
 export const GATE_SETUP_FIELDS = [
@@ -31,6 +32,7 @@ export const GATE_SETUP_FIELDS = [
 	{ name: 'openMode', address: 37, type: 'lowByte' },
 	{ name: 'airVelocity', address: 38, type: 'word' },
 	{ name: 'calibrationConstant', address: 39, type: 'word' },
+	{ name: 'linkedSystems', address: 41, type: 'word' },
 ]
 
 export const GATE_SETUP_STRING_FIELDS = [
@@ -54,6 +56,7 @@ export const GATE_SETUP_FIELD_LABELS = {
 	openMode: 'Open mode',
 	airVelocity: 'Air velocity',
 	calibrationConstant: 'Calibration constant',
+	linkedSystems: 'Linked systems',
 }
 
 export const buildGateSetupReads = (gateCount) => Array.from(

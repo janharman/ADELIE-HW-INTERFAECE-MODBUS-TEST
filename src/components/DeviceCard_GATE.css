@@ -4,9 +4,9 @@
 }
 
 .gate-toolbar {
-	display: flex;
+	display: grid;
+	grid-template-columns: 1fr auto 1fr;
 	align-items: center;
-	justify-content: space-between;
 	gap: 0.75rem;
 	min-height: 38px;
 	padding: 0.35rem 0.5rem;
@@ -17,7 +17,9 @@
 .gate-system-button-group {
 	display: flex;
 	flex-wrap: wrap;
+	grid-column: 2;
 	gap: 0.35rem;
+	justify-content: center;
 }
 
 .gate-system-button {
@@ -54,6 +56,9 @@
 }
 
 .gate-toolbar-button {
+	grid-column: 1;
+	grid-row: 1;
+	justify-self: start;
 	padding: 0.35rem 0.7rem;
 	border: 1px solid #7a2525;
 	border-radius: 3px;

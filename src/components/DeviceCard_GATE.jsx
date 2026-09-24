@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import './DeviceCard_GATE.css'
 
@@ -32,14 +32,29 @@ const getSystemButtonLabel = (system) => (
 	system?.systemCharacter?.trim() || '--'
 )
 
+const isGateLinkedToActiveSystem = (device, activeSystemIndexes) => {
+	const linkedSystems = Number(device?.linkedSystems ?? 0)
+	if (!linkedSystems) return false
+
+	return Array.from(activeSystemIndexes).some((systemIndex) => ((linkedSystems >> systemIndex) & 1) === 1)
+}
+
 function DeviceCard_GATE({ deviceCount, devices, runtimeData = [], systemCount = 0, systems = [], onSimulateSignal, onClearAllSignals }) {
-	const [activeSystemIndexes, setActiveSystemIndexes] = useState(() => new Set())
+	const [activeSystemIndexes, setActiveSystemIndexes] = useState(() => new Set(
+		Array.from({ length: systemCount || 0 }, (_, index) => index),
+	))
 	const systemButtons = Array.from({ length: systemCount || 0 }, (_, index) => ({
 		key: `system-${index}`,
 		index,
 		label: getSystemButtonLabel(systems[index]),
 	}))
 	const allSystemsActive = systemButtons.length > 0 && systemButtons.every((button) => activeSystemIndexes.has(button.index))
+	const visibleGateIndexes = Array.from({ length: deviceCount || 0 }, (_, index) => index)
+		.filter((index) => allSystemsActive || isGateLinkedToActiveSystem(devices[index], activeSystemIndexes))
+
+	useEffect(() => {
+		setActiveSystemIndexes(new Set(systemButtons.map((button) => button.index)))
+	}, [systemCount])
 
 	const toggleSystemButton = (index) => {
 		setActiveSystemIndexes((current) => {
@@ -54,8 +69,9 @@ function DeviceCard_GATE({ deviceCount, devices, runtimeData = [], systemCount =
 	}
 
 	const toggleAllSystemButtons = () => {
-		setActiveSystemIndexes(() => {
-			if (allSystemsActive) return new Set()
+		setActiveSystemIndexes((current) => {
+			const isEverySystemActive = systemButtons.length > 0 && systemButtons.every((button) => current.has(button.index))
+			if (isEverySystemActive) return new Set()
 			return new Set(systemButtons.map((button) => button.index))
 		})
 	}
@@ -138,7 +154,7 @@ function DeviceCard_GATE({ deviceCount, devices, runtimeData = [], systemCount =
 					</tr>
 				</thead>
 				<tbody>
-					{Array.from({ length: deviceCount || 0 }).map((_, index) => {
+					{visibleGateIndexes.map((index) => {
 						const device = devices[index]
 						const runtime = runtimeData[index]
 						const status = getGateStatus(runtime?.gateStatusBits)
