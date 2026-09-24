@@ -213,6 +213,7 @@ function ModbusManager({
 					} else {
 						// A runtime frame may be unsupported for one device category; keep the completed setup intact.
 						readIndex += 1
+								runtimeCategoryReadCount += 1
 					}
 				}
 			}

@@ -610,6 +610,8 @@ function App() {
 								deviceCount={gateSetups.length || greenBoxSetup?.numberOfGates}
 								devices={gateSetups}
 								runtimeData={gateRuntimeData}
+								systemCount={greenBoxSetup?.numberOfSystems}
+								systems={systemSetups}
 								onSimulateSignal={handleGateSignalSimulation}
 								onClearAllSignals={handleClearAllGateSignals}
 							/>

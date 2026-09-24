@@ -1,3 +1,5 @@
+import { useState } from 'react'
+
 import './DeviceCard_GATE.css'
 
 // Priority order used to pick the displayed movement or position status for a gate.
@@ -25,10 +27,61 @@ const getCommunicationQualityClass = (communicationStatus) => {
 	return 'communication-quality-medium'
 }
 
-function DeviceCard_GATE({ deviceCount, devices, runtimeData = [], onSimulateSignal, onClearAllSignals }) {
+
+const getSystemButtonLabel = (system) => (
+	system?.systemCharacter?.trim() || '--'
+)
+
+function DeviceCard_GATE({ deviceCount, devices, runtimeData = [], systemCount = 0, systems = [], onSimulateSignal, onClearAllSignals }) {
+	const [activeSystemIndexes, setActiveSystemIndexes] = useState(() => new Set())
+	const systemButtons = Array.from({ length: systemCount || 0 }, (_, index) => ({
+		key: `system-${index}`,
+		index,
+		label: getSystemButtonLabel(systems[index]),
+	}))
+	const allSystemsActive = systemButtons.length > 0 && systemButtons.every((button) => activeSystemIndexes.has(button.index))
+
+	const toggleSystemButton = (index) => {
+		setActiveSystemIndexes((current) => {
+			const next = new Set(current)
+			if (next.has(index)) {
+				next.delete(index)
+			} else {
+				next.add(index)
+			}
+			return next
+		})
+	}
+
+	const toggleAllSystemButtons = () => {
+		setActiveSystemIndexes(() => {
+			if (allSystemsActive) return new Set()
+			return new Set(systemButtons.map((button) => button.index))
+		})
+	}
+
 	return (
 		<div className="gate-table-wrapper">
 			<div className="gate-toolbar">
+				<div className="gate-system-button-group">
+					{systemButtons.map((button) => (
+						<button
+							className={`gate-system-button ${activeSystemIndexes.has(button.index) ? 'active' : ''}`}
+							type="button"
+							key={button.key}
+							onClick={() => toggleSystemButton(button.index)}
+						>
+							{button.label}
+						</button>
+					))}
+					<button
+						className={`gate-system-button gate-system-button-all ${allSystemsActive ? 'active' : ''}`}
+						type="button"
+						onClick={toggleAllSystemButtons}
+					>
+						ALL
+					</button>
+				</div>
 				<button
 					className="gate-toolbar-button"
 					type="button"
