@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import './DeviceCard_GATE.css'
 
@@ -9,6 +9,8 @@ const GATE_STATUS_PRIORITY = [
 	{ bit: 'open', label: 'OPEN', tone: 'ok' },
 	{ bit: 'closed', label: 'CLOSE', tone: 'closed' },
 ]
+
+const SIGNAL_SIMULATION_TIMEOUT = 5000
 
 const getGateStatus = (statusBits) => {
 	if (!statusBits) return null
@@ -43,6 +45,9 @@ function DeviceCard_GATE({ deviceCount, devices, runtimeData = [], systemCount =
 	const [activeSystemIndexes, setActiveSystemIndexes] = useState(() => new Set(
 		Array.from({ length: systemCount || 0 }, (_, index) => index),
 	))
+	const [pendingSignals, setPendingSignals] = useState({})
+	const previousRuntimeData = useRef(runtimeData)
+	const signalTimers = useRef(new Map())
 	const systemButtons = Array.from({ length: systemCount || 0 }, (_, index) => ({
 		key: `system-${index}`,
 		index,
@@ -55,6 +60,49 @@ function DeviceCard_GATE({ deviceCount, devices, runtimeData = [], systemCount =
 	useEffect(() => {
 		setActiveSystemIndexes(new Set(systemButtons.map((button) => button.index)))
 	}, [systemCount])
+
+	useEffect(() => {
+		setPendingSignals((current) => {
+			const next = { ...current }
+			let changed = false
+
+			Object.keys(current).forEach((index) => {
+				const loadedSignal = runtimeData[index]?.gateStatusBits?.simulatedSignal === 1
+				if (
+					runtimeData[index]
+					&& runtimeData[index] !== previousRuntimeData.current[index]
+					&& loadedSignal === current[index]
+				) {
+					delete next[index]
+					changed = true
+					clearTimeout(signalTimers.current.get(index))
+					signalTimers.current.delete(index)
+				}
+			})
+
+			return changed ? next : current
+		})
+		previousRuntimeData.current = runtimeData
+	}, [runtimeData])
+
+	useEffect(() => () => {
+		signalTimers.current.forEach((timer) => clearTimeout(timer))
+	}, [])
+
+	const handleSignalSimulation = (index) => {
+		const requestedSignal = runtimeData[index]?.gateStatusBits?.simulatedSignal !== 1
+		setPendingSignals((current) => ({ ...current, [index]: requestedSignal }))
+		clearTimeout(signalTimers.current.get(index))
+		signalTimers.current.set(index, setTimeout(() => {
+			setPendingSignals((current) => {
+				const next = { ...current }
+				delete next[index]
+				return next
+			})
+			signalTimers.current.delete(index)
+		}, SIGNAL_SIMULATION_TIMEOUT))
+		onSimulateSignal?.(index, requestedSignal)
+	}
 
 	const toggleSystemButton = (index) => {
 		setActiveSystemIndexes((current) => {
@@ -159,6 +207,7 @@ function DeviceCard_GATE({ deviceCount, devices, runtimeData = [], systemCount =
 						const runtime = runtimeData[index]
 						const status = getGateStatus(runtime?.gateStatusBits)
 							const simulatedSignal = runtime?.gateStatusBits?.simulatedSignal === 1
+						const signalPending = index in pendingSignals
 						const hasPressureDisplay = Number(device?.version ?? 0) >= 5
 						const showPressure = !!runtime && hasPressureDisplay
 
@@ -168,11 +217,11 @@ function DeviceCard_GATE({ deviceCount, devices, runtimeData = [], systemCount =
 								<td className="gate-mid-cell">{device?.motorId ?? '---'}</td>
 								<td className="gate-sim-cell">
 									<button
-										className={`gate-sim-button ${simulatedSignal ? 'active' : ''}`}
+										className={`gate-sim-button ${simulatedSignal ? 'active' : ''} ${signalPending ? 'pending' : ''}`}
 										type="button"
 										title="Simulate signal"
 										disabled={!onSimulateSignal}
-										onClick={() => onSimulateSignal?.(index, !simulatedSignal)}
+										onClick={() => handleSignalSimulation(index)}
 									>
 										S
 									</button>
