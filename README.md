@@ -29,7 +29,7 @@ Výsledkem bude složka `dist`. Její obsah nahraj na server do adresáře, kter
 Alternativně lze cestu zadat pouze při buildu:
 
 ```bash
-npm run build -- --base=/xxx/
+npm run build -- --base=/adelie-modbus-tester/
 ```
 
 Důležité je, aby server podporoval historii React aplikace a při požadavku na `/xxx/` vracel `index.html`.
