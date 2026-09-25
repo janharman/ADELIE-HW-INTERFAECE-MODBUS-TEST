@@ -351,6 +351,7 @@ const decodeGateRuntime = (response, frame) => {
 
 	const gateStatusRegister = getRegister(response, 1)
 	const errorTypeRegister = getRegister(response, 4)
+	const communicationQuality = getRegister(response, 0)
 	// Only offsets within frame.count were actually requested; reading further would pick up
 	// CRC bytes or run past the response entirely, so fall back to 0 until count is raised.
 	const openRequestRegister = frame.count > 12 ? getRegister(response, 12) : 0
@@ -362,7 +363,7 @@ const decodeGateRuntime = (response, frame) => {
 			.find(([, bit]) => ((openRequest >> bit) & 1) === 1)?.[0]
 	const jumperFunction = (errorTypeRegister >> 8) & 0xff
 	const values = {
-		communicationStatus: getRegister(response, 0),
+		communicationStatus: gateStatusRegister === 0 ? 0 : communicationQuality,
 		gateStatusBits: decodeBits(gateStatusRegister & 0xff, GATE_STATUS_BITS),
 		inputStatusBits: decodeBits((gateStatusRegister >> 8) & 0xff, GATE_INPUT_STATUS_BITS),
 		pressure: getRegister(response, 2),

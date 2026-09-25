@@ -96,6 +96,12 @@ function ModbusManager({
 				response = await serialRef.current.sendAndReceive(frame, 500)
 			} catch (error) {
 				onCommunicationStatusRef.current?.(read.name, false, 0, error.message)
+				if (read.decoder === 'gateRuntime') {
+					onResponseRef.current?.(null, read, {
+						gateIndex: read.gateIndex,
+						gateRuntime: { communicationStatus: 0 },
+					})
+				}
 				throw error
 			}
 

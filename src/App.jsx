@@ -310,7 +310,10 @@ function App() {
 		} else if (read.decoder === 'gateRuntime') {
 			setGateRuntimeData((current) => {
 				const next = [...current]
-				next[decodedData.gateIndex] = decodedData.gateRuntime
+				next[decodedData.gateIndex] = {
+					...current[decodedData.gateIndex],
+					...decodedData.gateRuntime,
+				}
 				return next
 			})
 		} else if (read.decoder === 'vsdSetup') {
