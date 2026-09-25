@@ -831,7 +831,7 @@ function App() {
 			</main>
 
 			<footer className="app-footer">
-				greenBOX Modbus-Master Tester (version 1 - 16.9.2026) | Ecogate Inc.
+				greenBOX Modbus-Master Tester (version 2 - 25.9.2026) | Ecogate Inc.
 			</footer>
 		</div>
 	)
