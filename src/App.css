@@ -35,7 +35,7 @@ body {
 	display: block;
 	height: 40px;
 	width: auto;
-	filter: drop-shadow(0 0 2px rgba(0, 255, 0, 0.2));
+	filter: brightness(0) saturate(100%) invert(84%) sepia(98%) saturate(1960%) hue-rotate(55deg) brightness(104%) contrast(106%) drop-shadow(0 0 5px rgba(57, 255, 20, 0.45));
 }
 
 .app-main-header h1 {
